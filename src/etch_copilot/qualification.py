@@ -10,7 +10,7 @@ import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
 from etch_copilot.loaders import BoschDataset, PhmDataset
-from etch_copilot.models import DatasetProvenance, ScientificReference
+from etch_copilot.models import DatasetProvenance, ScientificReference, Severity
 
 QUALIFICATION_ENGINE_VERSION = "1.0.0"
 EXPECTED_BOSCH_SITE_COUNT = 89
@@ -208,9 +208,9 @@ class PhmTimeContract(FrozenModel):
 
 class EventCoordinateCoverage(FrozenModel):
     event_index: int
-    equipment_id: str
-    fault_name: str
-    event_coordinate: int
+    equipment_id: str | None
+    fault_name: str | None
+    event_coordinate: int | None
     coordinate_unit: str | None
     exact_match: bool
     previous_coordinate: int | None
@@ -414,9 +414,10 @@ def _bosch_time_contract(dataset: BoschDataset) -> BoschTimeContract:
     regular = 0
     for run in dataset.runs:
         differences = np.diff(run.elapsed_time_s)
-        if np.all(differences > 0):
+        coordinates_finite = bool(np.all(np.isfinite(run.elapsed_time_s)))
+        if coordinates_finite and np.all(differences > 0):
             monotonic += 1
-        if len(differences):
+        if coordinates_finite and len(differences):
             intervals.extend(float(value) for value in differences)
             if np.allclose(differences, 0.2, rtol=0, atol=1e-5):
                 regular += 1
@@ -844,7 +845,7 @@ def qualify_bosch_scope(
 
 
 def _phm_identifier_contract(dataset: PhmDataset) -> IdentifierContract:
-    observed = tuple(sorted(set(dataset.observations["Tool"].astype(str))))
+    observed = tuple(sorted(set(dataset.observations["Tool"].dropna().astype(str))))
     manifest_id = dataset.manifest.get("selected_equipment_id")
     mappings: list[EquipmentIdMapping] = []
     mapped_sources: set[str] = set()
@@ -916,14 +917,39 @@ def event_coordinate_coverage(dataset: PhmDataset) -> tuple[EventCoordinateCover
     identifiers = _phm_identifier_contract(dataset)
     results: list[EventCoordinateCoverage] = []
     for index, event in enumerate(dataset.faults):
-        canonical_event = canonicalize_phm_equipment_id(event.equipment_id, identifiers)
+        if event.event_time is None:
+            results.append(
+                EventCoordinateCoverage(
+                    event_index=index,
+                    equipment_id=event.equipment_id,
+                    fault_name=event.fault_name,
+                    event_coordinate=None,
+                    coordinate_unit=None,
+                    exact_match=False,
+                    previous_coordinate=None,
+                    following_coordinate=None,
+                    nearest_distance=None,
+                    pre_event_observation_available=False,
+                    post_event_observation_available=False,
+                    coverage_status="unsupported_missing_source_coordinate",
+                )
+            )
+            continue
+        canonical_event = (
+            canonicalize_phm_equipment_id(event.equipment_id, identifiers)
+            if event.equipment_id is not None
+            else None
+        )
         matching_tools = [
             tool
-            for tool in sorted(set(dataset.observations["Tool"].astype(str)))
-            if tool == event.equipment_id
-            or (
-                canonical_event is not None
-                and canonicalize_phm_equipment_id(tool, identifiers) == canonical_event
+            for tool in sorted(set(dataset.observations["Tool"].dropna().astype(str)))
+            if event.equipment_id is not None
+            and (
+                tool == event.equipment_id
+                or (
+                    canonical_event is not None
+                    and canonicalize_phm_equipment_id(tool, identifiers) == canonical_event
+                )
             )
         ]
         equipment_rows = dataset.observations[
@@ -1022,35 +1048,50 @@ def build_phm_qualification(dataset: PhmDataset) -> PhmQualification:
     duplicates = _phm_duplicate_policy(dataset)
     coverage = event_coordinate_coverage(dataset)
     dataset_id = dataset.provenance.dataset_id
+    schema_error_codes = {
+        "MISSING_REQUIRED_VALUE",
+        "MANIFEST_SENSOR_COUNT_MISMATCH",
+        "MANIFEST_FAULT_COUNT_MISMATCH",
+        "FAULT_EQUIPMENT_MISMATCH",
+    }
+    schema_valid = not any(
+        issue.severity is Severity.ERROR and issue.code in schema_error_codes
+        for issue in dataset.validation.issues
+    )
+    validation_blocking = () if schema_valid else ("source validation failed",)
     readiness = (
         _decision(
             dataset_id,
             AnalysisId.PHM_SENSOR_DESCRIPTIVE,
-            ReadinessStatus.LIMITED,
+            ReadinessStatus.LIMITED if schema_valid else ReadinessStatus.BLOCKED,
             time_evidence,
+            blocking=validation_blocking,
             limitations=("Values are normalized and engineering units are unknown.",),
             rules=("PHM-UNIT-001", "PHM-DUPLICATE-001"),
         ),
         _decision(
             dataset_id,
             AnalysisId.PHM_FEATURE_AVAILABILITY,
-            ReadinessStatus.SUPPORTED,
+            ReadinessStatus.SUPPORTED if schema_valid else ReadinessStatus.BLOCKED,
             time_evidence,
+            blocking=validation_blocking,
             rules=("PHM-SCHEMA-001",),
         ),
         _decision(
             dataset_id,
             AnalysisId.PHM_TIME_SERIES,
-            ReadinessStatus.LIMITED,
+            ReadinessStatus.LIMITED if schema_valid else ReadinessStatus.BLOCKED,
             time_evidence,
+            blocking=validation_blocking,
             limitations=("Use raw source-coordinate order only.",),
             rules=("PHM-TIME-COORDINATE-001",),
         ),
         _decision(
             dataset_id,
             AnalysisId.PHM_FAULT_EVENT_INVENTORY,
-            ReadinessStatus.SUPPORTED,
+            ReadinessStatus.SUPPORTED if schema_valid else ReadinessStatus.BLOCKED,
             time_evidence,
+            blocking=validation_blocking,
             rules=("PHM-EVENT-PRESERVE-001",),
         ),
         _decision(
