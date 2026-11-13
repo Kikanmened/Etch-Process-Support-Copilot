@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "etch-process-support-copilot"
+version = "0.1.0"
+description = "Read-only engineering analysis foundations for semiconductor etch datasets"
+requires-python = ">=3.12"
+dependencies = [
+  "h5py>=3.12",
+  "h5netcdf>=1.4",
+  "numpy>=2.0",
+  "openpyxl>=3.1",
+  "pandas>=2.2",
+  "pyarrow>=18.0",
+  "pydantic>=2.10",
+  "pypdf>=5.1",
+  "xarray>=2024.10",
+]
+
+[dependency-groups]
+dev = [
+  "mypy>=1.13",
+  "pandas-stubs>=2.2",
+  "pytest>=8.3",
+  "pytest-cov>=6.0",
+  "ruff>=0.8",
+  "types-openpyxl>=3.1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/etch_copilot"]
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers"
+testpaths = ["tests"]
+markers = [
+  "integration: tests that read the local external datasets",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["etch_copilot"]
+
+[[tool.mypy.overrides]]
+module = ["h5py", "h5py.*"]
+ignore_missing_imports = true
+
