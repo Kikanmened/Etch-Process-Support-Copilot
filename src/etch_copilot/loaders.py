@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import zipfile
-from dataclasses import dataclass
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass, replace
+from io import BufferedReader
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +31,7 @@ from etch_copilot.models import (
 )
 from etch_copilot.provenance import (
     build_provenance,
+    open_regular_file,
     require_files,
     sha256_file,
     verify_provenance,
@@ -68,16 +73,24 @@ BOSCH_PRIMARY_REFERENCE_SHA256 = "7c2690954532617d8681c6c48d65ffb960d8e745c16b0d
 class IngestionLimits:
     """Conservative allocation limits for untrusted external research files."""
 
-    max_file_size_bytes: int = 512 * 1024 * 1024
+    max_file_size_bytes: int = 64 * 1024 * 1024
     max_archive_uncompressed_bytes: int = 256 * 1024 * 1024
     max_archive_members: int = 10_000
     max_bosch_runs: int = 10_000
     max_run_observations: int = 5_000_000
     max_features: int = 10_000
     max_dictionary_entries: int = 10_000_000
-    max_decoded_cells: int = 100_000_000
+    max_decoded_cells: int = 25_000_000
     max_tabular_rows: int = 10_000_000
     max_tabular_columns: int = 10_000
+    max_tabular_memory_bytes: int = 512 * 1024 * 1024
+    max_metrology_rows: int = 1_000_000
+    max_fault_events: int = 100_000
+    max_workbook_rows: int = 100_000
+    max_workbook_columns: int = 1_000
+    max_decoded_bytes: int = 256 * 1024 * 1024
+    max_feature_text_bytes: int = 4 * 1024 * 1024
+    max_delimited_record_bytes: int = 1024 * 1024
 
 
 @dataclass(frozen=True)
@@ -95,6 +108,7 @@ class BoschDataset:
     lot_status: pd.DataFrame
     validation: ValidationSummary
     scientific_references: tuple[ScientificReference, ...] = ()
+    content_sha256: str = ""
 
 
 @dataclass(frozen=True)
@@ -105,10 +119,64 @@ class PhmDataset:
     manifest: dict[str, Any]
     supplied_validation: dict[str, Any]
     validation: ValidationSummary
+    content_sha256: str = ""
 
 
-def _decode_strings(values: np.ndarray[Any, Any]) -> list[str]:
-    return [value.decode("utf-8") if isinstance(value, bytes) else str(value) for value in values]
+def _update_json_hash(digest: Any, value: Any) -> None:
+    digest.update(
+        json.dumps(value, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")
+    )
+
+
+def _update_frame_hash(digest: Any, frame: pd.DataFrame) -> None:
+    _update_json_hash(
+        digest,
+        {
+            "columns": [str(column) for column in frame.columns],
+            "dtypes": [str(dtype) for dtype in frame.dtypes],
+            "shape": frame.shape,
+        },
+    )
+    digest.update(pd.util.hash_pandas_object(frame, index=True).to_numpy().tobytes())
+
+
+def _dataset_content_sha256(dataset: BoschDataset | PhmDataset) -> str:
+    """Seal the exact in-memory content consumed by qualification and analytics."""
+    digest = hashlib.sha256()
+    _update_json_hash(digest, dataset.provenance.model_dump(mode="json"))
+    if isinstance(dataset, BoschDataset):
+        for run in dataset.runs:
+            _update_json_hash(digest, run.metadata.model_dump(mode="json"))
+            coordinates = np.asarray(run.elapsed_time_s, dtype=np.float64)
+            _update_json_hash(digest, {"shape": coordinates.shape, "dtype": str(coordinates.dtype)})
+            digest.update(coordinates.tobytes())
+            _update_frame_hash(digest, run.values)
+        _update_frame_hash(digest, dataset.metrology)
+        _update_frame_hash(digest, dataset.lot_status)
+        _update_json_hash(
+            digest,
+            [item.model_dump(mode="json") for item in dataset.scientific_references],
+        )
+    else:
+        _update_frame_hash(digest, dataset.observations)
+        _update_json_hash(digest, [item.model_dump(mode="json") for item in dataset.faults])
+        _update_json_hash(digest, dataset.manifest)
+        _update_json_hash(digest, dataset.supplied_validation)
+    _update_json_hash(digest, dataset.validation.model_dump(mode="json"))
+    return digest.hexdigest()
+
+
+def _decode_bounded_hdf5_strings(dataset: h5py.Dataset, max_bytes: int) -> list[str]:
+    decoded: list[str] = []
+    total_bytes = 0
+    for index in range(dataset.size):
+        value = dataset[index]
+        text = value.decode("utf-8") if isinstance(value, bytes) else str(value)
+        total_bytes += len(text.encode("utf-8"))
+        if total_bytes > max_bytes:
+            raise DatasetLoadError("HDF5 string content exceeds configured safety limit")
+        decoded.append(text)
+    return decoded
 
 
 def _decode_attribute(value: object) -> str:
@@ -119,6 +187,8 @@ def _decode_attribute(value: object) -> str:
 
 def _validate_source_files(files: tuple[Path, ...], limits: IngestionLimits) -> None:
     for path in files:
+        if path.is_symlink():
+            raise DatasetLoadError(f"Source files must not be symlinks: {path.name}")
         size = path.stat().st_size
         if size > limits.max_file_size_bytes:
             raise DatasetLoadError(
@@ -134,6 +204,72 @@ def _validate_source_files(files: tuple[Path, ...], limits: IngestionLimits) -> 
                 raise DatasetLoadError(f"XLSX expansion exceeds safety limit: {path.name}")
 
 
+def _hash_open_handle(handle: BufferedReader) -> str:
+    digest = hashlib.sha256()
+    handle.seek(0)
+    for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+        digest.update(chunk)
+    handle.seek(0)
+    return digest.hexdigest()
+
+
+@contextmanager
+def _open_verified_source(path: Path, expected_sha256: str) -> Iterator[BufferedReader]:
+    with open_regular_file(path) as handle:
+        if _hash_open_handle(handle) != expected_sha256:
+            raise DatasetLoadError(f"Source changed before parsing: {path.name}")
+        yield handle
+        if _hash_open_handle(handle) != expected_sha256:
+            raise DatasetLoadError(f"Source changed during parsing: {path.name}")
+
+
+def _read_bounded_csv(
+    path: Path,
+    expected_sha256: str,
+    limits: IngestionLimits,
+    max_rows: int,
+) -> pd.DataFrame:
+    chunks: list[pd.DataFrame] = []
+    row_count = 0
+    decoded_memory = 0
+    with _open_verified_source(path, expected_sha256) as handle:
+        current_record_bytes = 0
+        for physical_chunk in iter(lambda: handle.read(64 * 1024), b""):
+            for byte in physical_chunk:
+                if byte in (10, 13):
+                    current_record_bytes = 0
+                else:
+                    current_record_bytes += 1
+                    if current_record_bytes > limits.max_delimited_record_bytes:
+                        raise DatasetLoadError(
+                            f"Delimited source record exceeds configured safety limit: {path.name}"
+                        )
+        handle.seek(0)
+        header = pd.read_csv(handle, nrows=0)
+        if len(header.columns) > limits.max_tabular_columns:
+            raise DatasetLoadError(f"Delimited source column limit exceeded: {path.name}")
+        handle.seek(0)
+        for frame_chunk in pd.read_csv(handle, chunksize=10_000):
+            row_count += len(frame_chunk)
+            if row_count > max_rows:
+                raise DatasetLoadError(
+                    f"Delimited source row count exceeds configured safety limit: {path.name}"
+                )
+            if row_count * len(header.columns) > limits.max_decoded_cells:
+                raise DatasetLoadError(
+                    f"Delimited source cell count exceeds configured safety limit: {path.name}"
+                )
+            decoded_memory += int(frame_chunk.memory_usage(index=True, deep=True).sum())
+            if decoded_memory > limits.max_tabular_memory_bytes // 2:
+                raise DatasetLoadError(
+                    f"Delimited source memory exceeds configured safety limit: {path.name}"
+                )
+            chunks.append(frame_chunk)
+    if not chunks:
+        return header
+    return pd.concat(chunks, ignore_index=True)
+
+
 def _bosch_experiment_key(group_name: str) -> str | None:
     match = _BOSCH_GROUP.fullmatch(group_name)
     if match is None:
@@ -142,19 +278,54 @@ def _bosch_experiment_key(group_name: str) -> str | None:
     return f"{year}-{month}-{day}_{int(wafer):02d}"
 
 
-def _read_lot_status(path: Path) -> pd.DataFrame:
-    workbook = load_workbook(path, read_only=True, data_only=True)
-    try:
-        worksheet = workbook.active
-        if worksheet is None:
-            raise DatasetLoadError(f"Lot status workbook has no active worksheet: {path}")
-        rows = list(worksheet.values)
-    finally:
-        workbook.close()
+def _read_lot_status(path: Path, expected_sha256: str, limits: IngestionLimits) -> pd.DataFrame:
+    with _open_verified_source(path, expected_sha256) as source_handle:
+        workbook = load_workbook(source_handle, read_only=True, data_only=True)
+        try:
+            worksheet = workbook.active
+            if worksheet is None:
+                raise DatasetLoadError(f"Lot status workbook has no active worksheet: {path}")
+            if worksheet.max_row > limits.max_workbook_rows:
+                raise DatasetLoadError(f"Lot status workbook row limit exceeded: {path}")
+            if worksheet.max_column > limits.max_workbook_columns:
+                raise DatasetLoadError(f"Lot status workbook column limit exceeded: {path}")
+            if worksheet.max_row * worksheet.max_column > limits.max_decoded_cells:
+                raise DatasetLoadError(f"Lot status workbook cell limit exceeded: {path}")
+            rows = list(worksheet.values)
+        finally:
+            workbook.close()
     if not rows:
         raise DatasetLoadError(f"Lot status workbook is empty: {path}")
     headers = [str(value).strip() if value is not None else "" for value in rows[0]]
     return pd.DataFrame(rows[1:], columns=headers)
+
+
+def _require_internal_hdf5_dataset(dataset: object, label: str) -> None:
+    if not isinstance(dataset, h5py.Dataset):
+        raise DatasetLoadError(f"HDF5 member is not a dataset: {label}")
+    if dataset.is_virtual or dataset.external:
+        raise DatasetLoadError(f"HDF5 dataset uses external storage: {label}")
+
+
+def _require_hdf5_allocation(
+    dataset: h5py.Dataset,
+    label: str,
+    limits: IngestionLimits,
+    *,
+    kind: str,
+) -> None:
+    dtype = dataset.dtype
+    if kind == "integer" and not np.issubdtype(dtype, np.integer):
+        raise DatasetLoadError(f"HDF5 dataset must use an integer dtype: {label}")
+    if kind == "numeric" and not (
+        np.issubdtype(dtype, np.integer) or np.issubdtype(dtype, np.floating)
+    ):
+        raise DatasetLoadError(f"HDF5 dataset must use a real numeric dtype: {label}")
+    if kind == "string" and h5py.check_string_dtype(dtype) is None:
+        raise DatasetLoadError(f"HDF5 dataset must use a string dtype: {label}")
+    decoded_bytes = dataset.size * dtype.itemsize
+    if decoded_bytes > limits.max_decoded_bytes:
+        raise DatasetLoadError(f"HDF5 decoded bytes exceed configured safety limit: {label}")
 
 
 def load_bosch_dataset(
@@ -169,6 +340,8 @@ def load_bosch_dataset(
     primary_reference_path = source_dir.parent / "research" / "Readme.pdf"
     scientific_references: tuple[ScientificReference, ...] = ()
     if primary_reference_path.is_file():
+        if primary_reference_path.is_symlink():
+            raise DatasetLoadError("Primary scientific reference must not be a symlink")
         _validate_source_files((primary_reference_path,), active_limits)
         reference_hash = sha256_file(primary_reference_path)
         scientific_references = (
@@ -194,28 +367,71 @@ def load_bosch_dataset(
     sampling_gap_count = 0
     total_observations = 0
     decoded_cells = 0
-    with h5py.File(source_dir / "Dictionary_process.nc", "r") as dictionary_file:
+    with (
+        _open_verified_source(
+            source_dir / "Dictionary_process.nc",
+            provenance.sha256["Dictionary_process.nc"],
+        ) as source_handle,
+        h5py.File(source_handle, "r") as dictionary_file,
+    ):
+        if not isinstance(dictionary_file.get("data", getlink=True), h5py.HardLink):
+            raise DatasetLoadError("BOSCH dictionary data must be an internal hard link")
         if "data" not in dictionary_file:
             raise DatasetLoadError("Dictionary_process.nc does not contain required dataset 'data'")
+        _require_internal_hdf5_dataset(dictionary_file["data"], "Dictionary_process.nc/data")
+        _require_hdf5_allocation(
+            dictionary_file["data"],
+            "Dictionary_process.nc/data",
+            active_limits,
+            kind="numeric",
+        )
         if dictionary_file["data"].size > active_limits.max_dictionary_entries:
             raise DatasetLoadError("BOSCH dictionary exceeds configured entry safety limit")
         decoder = np.asarray(dictionary_file["data"][:], dtype=np.float64)
-    with h5py.File(source_dir / "Process_data.nc", "r") as process_file:
+    with (
+        _open_verified_source(
+            source_dir / "Process_data.nc", provenance.sha256["Process_data.nc"]
+        ) as source_handle,
+        h5py.File(source_handle, "r") as process_file,
+    ):
         if not process_file.keys():
             raise DatasetLoadError("Process_data.nc contains no wafer groups")
         if len(process_file) > active_limits.max_bosch_runs:
             raise DatasetLoadError("BOSCH run count exceeds configured safety limit")
         for group_name in sorted(process_file.keys()):
+            if not isinstance(process_file.get(group_name, getlink=True), h5py.HardLink):
+                raise DatasetLoadError(f"BOSCH group must be an internal hard link: {group_name}")
             group = process_file[group_name]
+            if not isinstance(group, h5py.Group):
+                raise DatasetLoadError(f"BOSCH run member is not a group: {group_name}")
             missing_members = {"data", "feature", "times"} - set(group.keys())
             if missing_members:
                 raise DatasetLoadError(
                     f"BOSCH group {group_name} is missing: {', '.join(sorted(missing_members))}"
                 )
+            for member_name in ("data", "feature", "times"):
+                if not isinstance(group.get(member_name, getlink=True), h5py.HardLink):
+                    raise DatasetLoadError(
+                        f"BOSCH member must be an internal hard link: {group_name}/{member_name}"
+                    )
+                _require_internal_hdf5_dataset(group[member_name], f"{group_name}/{member_name}")
+            _require_hdf5_allocation(
+                group["data"], f"{group_name}/data", active_limits, kind="integer"
+            )
+            _require_hdf5_allocation(
+                group["feature"], f"{group_name}/feature", active_limits, kind="string"
+            )
+            _require_hdf5_allocation(
+                group["times"], f"{group_name}/times", active_limits, kind="numeric"
+            )
             data_shape = group["data"].shape
             if len(data_shape) != 2:
                 raise DatasetLoadError(f"Invalid BOSCH data rank in group {group_name}")
             run_observations, run_features = data_shape
+            feature_shape = group["feature"].shape
+            time_shape = group["times"].shape
+            if feature_shape != (run_features,) or time_shape != (run_observations,):
+                raise DatasetLoadError(f"Shape mismatch in BOSCH group {group_name}")
             if run_observations > active_limits.max_run_observations:
                 raise DatasetLoadError(
                     f"BOSCH run observation limit exceeded in group {group_name}"
@@ -226,7 +442,11 @@ def load_bosch_dataset(
             if decoded_cells > active_limits.max_decoded_cells:
                 raise DatasetLoadError("BOSCH decoded allocation exceeds configured safety limit")
             encoded = np.asarray(group["data"][:])
-            features = _decode_strings(np.asarray(group["feature"][:]))
+            if encoded.size and int(encoded.min()) < 0:
+                raise DatasetLoadError(f"Negative dictionary index in BOSCH group {group_name}")
+            features = _decode_bounded_hdf5_strings(
+                group["feature"], active_limits.max_feature_text_bytes
+            )
             times = np.asarray(group["times"][:], dtype=np.float64)
             time_units = _decode_attribute(group["times"].attrs.get("units", "")) or None
             time_calendar = _decode_attribute(group["times"].attrs.get("calendar", "")) or None
@@ -273,7 +493,12 @@ def load_bosch_dataset(
                 )
             )
     try:
-        metrology = pd.read_csv(source_dir / "Si_Oxide_etch_89_points.csv")
+        metrology = _read_bounded_csv(
+            source_dir / "Si_Oxide_etch_89_points.csv",
+            provenance.sha256["Si_Oxide_etch_89_points.csv"],
+            active_limits,
+            active_limits.max_metrology_rows,
+        )
     except (OSError, pd.errors.ParserError, UnicodeError) as exc:
         raise DatasetLoadError(f"Cannot parse BOSCH metrology CSV: {exc}") from exc
     missing_columns = set(BOSCH_METROLOGY_COLUMNS) - set(metrology.columns)
@@ -281,11 +506,22 @@ def load_bosch_dataset(
         raise DatasetLoadError(
             f"BOSCH metrology CSV missing columns: {', '.join(sorted(missing_columns))}"
         )
-    if len(metrology) > active_limits.max_tabular_rows:
+    if len(metrology) > active_limits.max_metrology_rows:
         raise DatasetLoadError("BOSCH metrology row count exceeds configured safety limit")
     if len(metrology.columns) > active_limits.max_tabular_columns:
         raise DatasetLoadError("BOSCH metrology column count exceeds configured safety limit")
-    lot_status = _read_lot_status(source_dir / "Lot_status.xlsx")
+    if len(metrology) * len(metrology.columns) > active_limits.max_decoded_cells:
+        raise DatasetLoadError("BOSCH metrology cell count exceeds configured safety limit")
+    if (
+        int(metrology.memory_usage(index=True, deep=True).sum())
+        > active_limits.max_tabular_memory_bytes
+    ):
+        raise DatasetLoadError("BOSCH metrology exceeds configured in-memory safety limit")
+    lot_status = _read_lot_status(
+        source_dir / "Lot_status.xlsx",
+        provenance.sha256["Lot_status.xlsx"],
+        active_limits,
+    )
     run_keys = {run.metadata.wafer_id for run in runs if run.metadata.wafer_id}
     metrology_keys = set(metrology["experiment_key"].astype(str))
     unmatched_runs = sorted(run_keys - metrology_keys)
@@ -380,7 +616,7 @@ def load_bosch_dataset(
     for reference in scientific_references:
         if sha256_file(primary_reference_path) != reference.sha256:
             raise DatasetLoadError("Primary scientific reference changed during ingestion")
-    return BoschDataset(
+    dataset = BoschDataset(
         provenance,
         tuple(runs),
         metrology,
@@ -388,6 +624,7 @@ def load_bosch_dataset(
         validation,
         scientific_references,
     )
+    return replace(dataset, content_sha256=_dataset_content_sha256(dataset))
 
 
 def load_phm_dataset(directory: str | Path, *, limits: IngestionLimits | None = None) -> PhmDataset:
@@ -401,20 +638,54 @@ def load_phm_dataset(directory: str | Path, *, limits: IngestionLimits | None = 
         required,
         ("Fault-centered subset plus deterministic normal sample; not an unbiased benchmark",),
     )
-    parquet_metadata = pq.ParquetFile(source_dir / "equipment_sensor_data.parquet").metadata
+    with _open_verified_source(
+        source_dir / "equipment_sensor_data.parquet",
+        provenance.sha256["equipment_sensor_data.parquet"],
+    ) as source_handle:
+        parquet_metadata = pq.ParquetFile(source_handle).metadata
     if parquet_metadata.num_rows > active_limits.max_tabular_rows:
         raise DatasetLoadError("PHM Parquet row count exceeds configured safety limit")
     if parquet_metadata.num_columns > active_limits.max_tabular_columns:
         raise DatasetLoadError("PHM Parquet column count exceeds configured safety limit")
+    parquet_cells = parquet_metadata.num_rows * parquet_metadata.num_columns
+    if parquet_cells > active_limits.max_decoded_cells:
+        raise DatasetLoadError("PHM Parquet decoded cell count exceeds configured safety limit")
+    uncompressed_bytes = sum(
+        parquet_metadata.row_group(row_group).column(column).total_uncompressed_size
+        for row_group in range(parquet_metadata.num_row_groups)
+        for column in range(parquet_metadata.num_columns)
+    )
+    if uncompressed_bytes > active_limits.max_tabular_memory_bytes:
+        raise DatasetLoadError("PHM Parquet decoded bytes exceed configured safety limit")
     try:
-        observations = pd.read_parquet(source_dir / "equipment_sensor_data.parquet")
-        fault_frame = pd.read_csv(source_dir / "fault_events.csv")
-        manifest = json.loads((source_dir / "dataset_manifest.json").read_text(encoding="utf-8"))
-        supplied_validation = json.loads(
-            (source_dir / "validation_report.json").read_text(encoding="utf-8")
+        with _open_verified_source(
+            source_dir / "equipment_sensor_data.parquet",
+            provenance.sha256["equipment_sensor_data.parquet"],
+        ) as source_handle:
+            observations = pd.read_parquet(source_handle)
+        fault_frame = _read_bounded_csv(
+            source_dir / "fault_events.csv",
+            provenance.sha256["fault_events.csv"],
+            active_limits,
+            active_limits.max_fault_events,
         )
+        with _open_verified_source(
+            source_dir / "dataset_manifest.json",
+            provenance.sha256["dataset_manifest.json"],
+        ) as source_handle:
+            manifest = json.load(source_handle)
+        with _open_verified_source(
+            source_dir / "validation_report.json",
+            provenance.sha256["validation_report.json"],
+        ) as source_handle:
+            supplied_validation = json.load(source_handle)
     except (OSError, ValueError, pd.errors.ParserError, json.JSONDecodeError) as exc:
         raise DatasetLoadError(f"Cannot parse PHM compact dataset: {exc}") from exc
+    if (
+        int(observations.memory_usage(index=True, deep=True).sum())
+        > active_limits.max_tabular_memory_bytes
+    ):
+        raise DatasetLoadError("PHM observations exceed configured in-memory safety limit")
     missing_sensor_columns = set(PHM_ID_COLUMNS) - set(observations.columns)
     missing_fault_columns = set(PHM_FAULT_COLUMNS) - set(fault_frame.columns)
     if missing_sensor_columns or missing_fault_columns:
@@ -422,8 +693,17 @@ def load_phm_dataset(directory: str | Path, *, limits: IngestionLimits | None = 
             "PHM source schema missing required columns: "
             + ", ".join(sorted(missing_sensor_columns | missing_fault_columns))
         )
-    if len(fault_frame) > active_limits.max_tabular_rows:
+    if len(fault_frame) > active_limits.max_fault_events:
         raise DatasetLoadError("PHM fault row count exceeds configured safety limit")
+    if len(fault_frame.columns) > active_limits.max_tabular_columns:
+        raise DatasetLoadError("PHM fault column count exceeds configured safety limit")
+    if len(fault_frame) * len(fault_frame.columns) > active_limits.max_decoded_cells:
+        raise DatasetLoadError("PHM fault cell count exceeds configured safety limit")
+    if (
+        int(fault_frame.memory_usage(index=True, deep=True).sum())
+        > active_limits.max_tabular_memory_bytes
+    ):
+        raise DatasetLoadError("PHM faults exceed configured in-memory safety limit")
     issues: list[DataQualityIssue] = []
     for column in PHM_ID_COLUMNS:
         if observations[column].isna().any():
@@ -466,8 +746,8 @@ def load_phm_dataset(directory: str | Path, *, limits: IngestionLimits | None = 
                 ),
             )
         )
-    sensor_tools = set(observations["Tool"].astype(str))
-    fault_tools = set(fault_frame["Tool"].astype(str))
+    sensor_tools = set(observations["Tool"].dropna().astype(str))
+    fault_tools = set(fault_frame["Tool"].dropna().astype(str))
     unknown_fault_tools = sorted(fault_tools - sensor_tools)
     if unknown_fault_tools:
         issues.append(
@@ -478,8 +758,23 @@ def load_phm_dataset(directory: str | Path, *, limits: IngestionLimits | None = 
                 details={"equipment_ids": unknown_fault_tools},
             )
         )
+    for column in PHM_FAULT_COLUMNS:
+        missing_fault_values = int(fault_frame[column].isna().sum())
+        if missing_fault_values:
+            issues.append(
+                DataQualityIssue(
+                    code="MISSING_FAULT_EVENT_FIELD",
+                    severity=Severity.WARNING,
+                    message=(
+                        f"PHM fault field {column} is missing in "
+                        f"{missing_fault_values} event records."
+                    ),
+                    source_file="fault_events.csv",
+                )
+            )
     start, end = int(observations["time"].min()), int(observations["time"].max())
-    faults_outside_range = int((~fault_frame["time"].between(start, end)).sum())
+    present_fault_coordinates = fault_frame["time"].dropna()
+    faults_outside_range = int((~present_fault_coordinates.between(start, end)).sum())
     if faults_outside_range:
         issues.append(
             DataQualityIssue(
@@ -539,9 +834,9 @@ def load_phm_dataset(directory: str | Path, *, limits: IngestionLimits | None = 
                 },
             )
         )
-    fault_times = fault_frame["time"].astype("int64").tolist()
-    fault_names = fault_frame["fault_name"].astype(str).tolist()
-    fault_equipment = fault_frame["Tool"].astype(str).tolist()
+    fault_times = [None if pd.isna(value) else int(value) for value in fault_frame["time"]]
+    fault_names = [None if pd.isna(value) else str(value) for value in fault_frame["fault_name"]]
+    fault_equipment = [None if pd.isna(value) else str(value) for value in fault_frame["Tool"]]
     faults = tuple(
         FaultEvent(event_time=event_time, fault_name=fault_name, equipment_id=equipment_id)
         for event_time, fault_name, equipment_id in zip(
@@ -584,4 +879,7 @@ def load_phm_dataset(directory: str | Path, *, limits: IngestionLimits | None = 
         ),
     )
     verify_provenance(provenance, source_dir)
-    return PhmDataset(provenance, observations, faults, manifest, supplied_validation, validation)
+    dataset = PhmDataset(
+        provenance, observations, faults, manifest, supplied_validation, validation
+    )
+    return replace(dataset, content_sha256=_dataset_content_sha256(dataset))

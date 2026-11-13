@@ -68,9 +68,9 @@ class WaferMetrology(BaseModel):
 
 
 class FaultEvent(BaseModel):
-    event_time: int
-    fault_name: str
-    equipment_id: str
+    event_time: int | None
+    fault_name: str | None
+    equipment_id: str | None
     time_semantics: str = "recorded event time; not assumed to be exact fault onset"
 
 
