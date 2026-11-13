@@ -14,3 +14,9 @@ data/external/
 
 # Deterministic audit outputs are generated locally.
 data/processed/
+
+# Local standards references; reviewed summaries belong in docs, not source PDFs.
+docs/E-Handbook.pdf
+docs/JCGM_100_2008_E.pdf
+docs/JCGM_200_2012.pdf
+docs/NIST.AI.600-1.pdf
