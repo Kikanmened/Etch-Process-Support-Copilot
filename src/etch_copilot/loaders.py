@@ -21,10 +21,16 @@ from etch_copilot.models import (
     DatasetProvenance,
     FaultEvent,
     ProcessRun,
+    ScientificReference,
     Severity,
     ValidationSummary,
 )
-from etch_copilot.provenance import build_provenance, require_files, verify_provenance
+from etch_copilot.provenance import (
+    build_provenance,
+    require_files,
+    sha256_file,
+    verify_provenance,
+)
 
 BOSCH_REQUIRED = (
     "Process_data.nc",
@@ -55,6 +61,7 @@ BOSCH_METROLOGY_COLUMNS = (
     "si_etch",
 )
 _BOSCH_GROUP = re.compile(r"Day_(\d{4})_(\d{2})_(\d{2})_Wafer_(\d+)$")
+BOSCH_PRIMARY_REFERENCE_SHA256 = "7c2690954532617d8681c6c48d65ffb960d8e745c16b0dd12b76c64b1b167336"
 
 
 @dataclass(frozen=True)
@@ -87,6 +94,7 @@ class BoschDataset:
     metrology: pd.DataFrame
     lot_status: pd.DataFrame
     validation: ValidationSummary
+    scientific_references: tuple[ScientificReference, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -158,6 +166,20 @@ def load_bosch_dataset(
     optional_pdf = source_dir / "Readme.pdf"
     source_files = required + ((optional_pdf,) if optional_pdf.is_file() else ())
     _validate_source_files(source_files, active_limits)
+    primary_reference_path = source_dir.parent / "research" / "Readme.pdf"
+    scientific_references: tuple[ScientificReference, ...] = ()
+    if primary_reference_path.is_file():
+        _validate_source_files((primary_reference_path,), active_limits)
+        reference_hash = sha256_file(primary_reference_path)
+        scientific_references = (
+            ScientificReference(
+                reference_id="bosch_experimental_context_readme",
+                source_path="research/Readme.pdf",
+                sha256=reference_hash,
+                role="primary_scientific_reference",
+                verified=reference_hash == BOSCH_PRIMARY_REFERENCE_SHA256,
+            ),
+        )
     provenance = build_provenance(
         "bosch_plasma_etch_2025",
         source_dir,
@@ -355,7 +377,17 @@ def load_bosch_dataset(
         ),
     )
     verify_provenance(provenance, source_dir)
-    return BoschDataset(provenance, tuple(runs), metrology, lot_status, validation)
+    for reference in scientific_references:
+        if sha256_file(primary_reference_path) != reference.sha256:
+            raise DatasetLoadError("Primary scientific reference changed during ingestion")
+    return BoschDataset(
+        provenance,
+        tuple(runs),
+        metrology,
+        lot_status,
+        validation,
+        scientific_references,
+    )
 
 
 def load_phm_dataset(directory: str | Path, *, limits: IngestionLimits | None = None) -> PhmDataset:

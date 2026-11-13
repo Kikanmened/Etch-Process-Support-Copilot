@@ -10,7 +10,7 @@ import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
 from etch_copilot.loaders import BoschDataset, PhmDataset
-from etch_copilot.models import DatasetProvenance
+from etch_copilot.models import DatasetProvenance, ScientificReference
 
 QUALIFICATION_ENGINE_VERSION = "1.0.0"
 EXPECTED_BOSCH_SITE_COUNT = 89
@@ -92,6 +92,28 @@ class BoschTimeContract(FrozenModel):
     permitted_uses: tuple[str, ...]
     blocked_uses: tuple[str, ...]
     unresolved_issues: tuple[str, ...]
+    evidence: tuple[EvidenceReference, ...]
+
+
+class BoschExperimentalContext(FrozenModel):
+    primary_reference: ScientificReference | None
+    primary_reference_verified: bool
+    process_type: str | None
+    substrate: str | None
+    wafer_diameter_mm: int | None
+    etch_gas: str | None
+    passivation_gas: str | None
+    ignition_duration_s: float | None
+    nominal_cycle_count: int | None
+    etch_phase_duration_s: float | None
+    passivation_phase_duration_s: float | None
+    conditioning_study: str | None
+    pre_etch_spatial_measurement_count: int | None
+    target_spatial_site_count: int | None
+    pre_etch_values_were_interpolated: bool | None
+    post_etch_missing_values_were_interpolated: bool | None
+    measurement_limitations: tuple[str, ...]
+    limitations: tuple[str, ...]
     evidence: tuple[EvidenceReference, ...]
 
 
@@ -204,6 +226,7 @@ class BoschQualification(FrozenModel):
     dataset_id: str
     engine_version: str
     provenance: DatasetProvenance
+    experimental_context: BoschExperimentalContext
     time: BoschTimeContract
     metrology: BoschMetrologyContract
     features: BoschFeatureRegistry
@@ -265,6 +288,96 @@ def _evidence(
         evidence_type=evidence_type,
         locator=locator,
         verification_method=method,
+    )
+
+
+def _primary_scientific_reference(dataset: BoschDataset) -> ScientificReference | None:
+    return next(
+        (
+            reference
+            for reference in dataset.scientific_references
+            if reference.role == "primary_scientific_reference"
+        ),
+        None,
+    )
+
+
+def _reference_evidence(
+    dataset: BoschDataset,
+    reference: ScientificReference,
+    locator: str,
+    method: str,
+) -> EvidenceReference:
+    return EvidenceReference(
+        dataset_id=dataset.provenance.dataset_id,
+        source_file=reference.source_path,
+        sha256=reference.sha256,
+        evidence_type=(
+            "primary_scientific_reference"
+            if reference.verified
+            else "unverified_scientific_reference"
+        ),
+        locator=locator,
+        verification_method=method,
+    )
+
+
+def _bosch_experimental_context(dataset: BoschDataset) -> BoschExperimentalContext:
+    reference = _primary_scientific_reference(dataset)
+    verified = reference is not None and reference.verified
+    evidence = (
+        (
+            _reference_evidence(
+                dataset,
+                reference,
+                "sections 1, 2.2, 2.3.1, and 2.3.2",
+                "verified document hash and extracted experimental and metrology semantics",
+            ),
+        )
+        if reference is not None
+        else ()
+    )
+    return BoschExperimentalContext(
+        primary_reference=reference,
+        primary_reference_verified=verified,
+        process_type="cyclic BOSCH silicon plasma etch" if verified else None,
+        substrate="200 mm <100> silicon wafer with SiO2 mask" if verified else None,
+        wafer_diameter_mm=200 if verified else None,
+        etch_gas="SF6" if verified else None,
+        passivation_gas="C4F8" if verified else None,
+        ignition_duration_s=1.0 if verified else None,
+        nominal_cycle_count=100 if verified else None,
+        etch_phase_duration_s=4.5 if verified else None,
+        passivation_phase_duration_s=1.5 if verified else None,
+        conditioning_study=(
+            "one, three, or nine repeated conditioning sequences on chuck, Si, or SiO2"
+            if verified
+            else None
+        ),
+        pre_etch_spatial_measurement_count=15 if verified else None,
+        target_spatial_site_count=89 if verified else None,
+        pre_etch_values_were_interpolated=True if verified else None,
+        post_etch_missing_values_were_interpolated=True if verified else None,
+        measurement_limitations=(
+            (
+                "Pre-etch 89-site thickness was reconstructed from 15 measured points using IDW.",
+                "Missing post-etch interferometer values were reconstructed using IDW.",
+                "Manual nine-point measurements are subject to operator error.",
+                "Conditioning effects did not show a clear trend in the source study.",
+            )
+            if verified
+            else ()
+        ),
+        limitations=(
+            (
+                "The research experiment does not establish a qualified production baseline.",
+                "Interpolated values must remain distinguishable from direct measurements.",
+                "The reference explains context but does not resolve ambiguous CSV unit encoding.",
+            )
+            if verified
+            else ("reference hash is not recognized",)
+        ),
+        evidence=evidence,
     )
 
 
@@ -339,7 +452,18 @@ def _bosch_time_contract(dataset: BoschDataset) -> BoschTimeContract:
         "inspected monotonicity, range, per-run reset behavior, and sampling deltas",
     )
     evidence_items = [netcdf_evidence]
-    if "Readme.pdf" in dataset.provenance.sha256:
+    primary_reference = _primary_scientific_reference(dataset)
+    if primary_reference is not None and primary_reference.verified:
+        evidence_items.insert(
+            0,
+            _reference_evidence(
+                dataset,
+                primary_reference,
+                "section 2.2 Process Parameters",
+                "primary reference documents 5 Hz acquisition and per-wafer groups",
+            ),
+        )
+    elif "Readme.pdf" in dataset.provenance.sha256:
         evidence_items.append(
             _evidence(
                 dataset,
@@ -454,7 +578,18 @@ def _bosch_metrology_contract(dataset: BoschDataset) -> BoschMetrologyContract:
             "grouped by experiment key and checked join cardinality, positions, and nulls",
         )
     ]
-    if "Readme.pdf" in dataset.provenance.sha256:
+    primary_reference = _primary_scientific_reference(dataset)
+    if primary_reference is not None and primary_reference.verified:
+        evidence_items.insert(
+            0,
+            _reference_evidence(
+                dataset,
+                primary_reference,
+                "sections 2.3.1 and 2.3.2 Measurement Data",
+                "primary reference documents instruments, sampling, interpolation, and limitations",
+            ),
+        )
+    elif "Readme.pdf" in dataset.provenance.sha256:
         evidence_items.append(
             _evidence(
                 dataset,
@@ -535,11 +670,12 @@ def _bosch_feature_registry(dataset: BoschDataset) -> BoschFeatureRegistry:
 
 
 def build_bosch_qualification(dataset: BoschDataset) -> BoschQualification:
+    experimental_context = _bosch_experimental_context(dataset)
     time = _bosch_time_contract(dataset)
     metrology = _bosch_metrology_contract(dataset)
     features = _bosch_feature_registry(dataset)
-    sensor_evidence = features.evidence + time.evidence
-    metrology_evidence = metrology.evidence
+    sensor_evidence = experimental_context.evidence + features.evidence + time.evidence
+    metrology_evidence = experimental_context.evidence + metrology.evidence
     dataset_id = dataset.provenance.dataset_id
     readiness = (
         _decision(
@@ -644,6 +780,7 @@ def build_bosch_qualification(dataset: BoschDataset) -> BoschQualification:
         dataset_id=dataset_id,
         engine_version=QUALIFICATION_ENGINE_VERSION,
         provenance=dataset.provenance,
+        experimental_context=experimental_context,
         time=time,
         metrology=metrology,
         features=features,
