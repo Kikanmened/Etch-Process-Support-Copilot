@@ -31,7 +31,15 @@ def phm_fixture(tmp_path: Path) -> Path:
         directory / "fault_events.csv", index=False
     )
     (directory / "dataset_manifest.json").write_text(
-        json.dumps({"retained_sensor_rows": 3, "retained_fault_rows": 1}), encoding="utf-8"
+        json.dumps(
+            {
+                "selected_equipment_id": "01_M01",
+                "retained_sensor_rows": 3,
+                "retained_fault_rows": 1,
+                "sampling_strategy": "fault-centered fixture",
+            }
+        ),
+        encoding="utf-8",
     )
     (directory / "validation_report.json").write_text("{}", encoding="utf-8")
     (directory / "README.md").write_text("test fixture", encoding="utf-8")

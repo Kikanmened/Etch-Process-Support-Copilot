@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -11,6 +12,7 @@ from typing import Any
 import h5py
 import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 from openpyxl import load_workbook
 
 from etch_copilot.models import (
@@ -22,7 +24,7 @@ from etch_copilot.models import (
     Severity,
     ValidationSummary,
 )
-from etch_copilot.provenance import build_provenance, require_files
+from etch_copilot.provenance import build_provenance, require_files, verify_provenance
 
 BOSCH_REQUIRED = (
     "Process_data.nc",
@@ -56,6 +58,22 @@ _BOSCH_GROUP = re.compile(r"Day_(\d{4})_(\d{2})_(\d{2})_Wafer_(\d+)$")
 
 
 @dataclass(frozen=True)
+class IngestionLimits:
+    """Conservative allocation limits for untrusted external research files."""
+
+    max_file_size_bytes: int = 512 * 1024 * 1024
+    max_archive_uncompressed_bytes: int = 256 * 1024 * 1024
+    max_archive_members: int = 10_000
+    max_bosch_runs: int = 10_000
+    max_run_observations: int = 5_000_000
+    max_features: int = 10_000
+    max_dictionary_entries: int = 10_000_000
+    max_decoded_cells: int = 100_000_000
+    max_tabular_rows: int = 10_000_000
+    max_tabular_columns: int = 10_000
+
+
+@dataclass(frozen=True)
 class BoschRunData:
     metadata: ProcessRun
     elapsed_time_s: np.ndarray[Any, np.dtype[np.float64]]
@@ -85,6 +103,29 @@ def _decode_strings(values: np.ndarray[Any, Any]) -> list[str]:
     return [value.decode("utf-8") if isinstance(value, bytes) else str(value) for value in values]
 
 
+def _decode_attribute(value: object) -> str:
+    if isinstance(value, bytes):
+        return value.decode("utf-8")
+    return str(value)
+
+
+def _validate_source_files(files: tuple[Path, ...], limits: IngestionLimits) -> None:
+    for path in files:
+        size = path.stat().st_size
+        if size > limits.max_file_size_bytes:
+            raise DatasetLoadError(
+                f"Source file exceeds configured safety limit: {path.name} ({size} bytes)"
+            )
+        if path.suffix.lower() == ".xlsx":
+            with zipfile.ZipFile(path) as archive:
+                members = archive.infolist()
+                uncompressed = sum(member.file_size for member in members)
+            if len(members) > limits.max_archive_members:
+                raise DatasetLoadError(f"XLSX member count exceeds safety limit: {path.name}")
+            if uncompressed > limits.max_archive_uncompressed_bytes:
+                raise DatasetLoadError(f"XLSX expansion exceeds safety limit: {path.name}")
+
+
 def _bosch_experiment_key(group_name: str) -> str | None:
     match = _BOSCH_GROUP.fullmatch(group_name)
     if match is None:
@@ -108,11 +149,15 @@ def _read_lot_status(path: Path) -> pd.DataFrame:
     return pd.DataFrame(rows[1:], columns=headers)
 
 
-def load_bosch_dataset(directory: str | Path) -> BoschDataset:
+def load_bosch_dataset(
+    directory: str | Path, *, limits: IngestionLimits | None = None
+) -> BoschDataset:
     source_dir = Path(directory)
+    active_limits = limits or IngestionLimits()
     required = require_files(source_dir, BOSCH_REQUIRED)
     optional_pdf = source_dir / "Readme.pdf"
     source_files = required + ((optional_pdf,) if optional_pdf.is_file() else ())
+    _validate_source_files(source_files, active_limits)
     provenance = build_provenance(
         "bosch_plasma_etch_2025",
         source_dir,
@@ -126,13 +171,18 @@ def load_bosch_dataset(directory: str | Path) -> BoschDataset:
     duplicate_count = 0
     sampling_gap_count = 0
     total_observations = 0
+    decoded_cells = 0
     with h5py.File(source_dir / "Dictionary_process.nc", "r") as dictionary_file:
         if "data" not in dictionary_file:
             raise DatasetLoadError("Dictionary_process.nc does not contain required dataset 'data'")
+        if dictionary_file["data"].size > active_limits.max_dictionary_entries:
+            raise DatasetLoadError("BOSCH dictionary exceeds configured entry safety limit")
         decoder = np.asarray(dictionary_file["data"][:], dtype=np.float64)
     with h5py.File(source_dir / "Process_data.nc", "r") as process_file:
         if not process_file.keys():
             raise DatasetLoadError("Process_data.nc contains no wafer groups")
+        if len(process_file) > active_limits.max_bosch_runs:
+            raise DatasetLoadError("BOSCH run count exceeds configured safety limit")
         for group_name in sorted(process_file.keys()):
             group = process_file[group_name]
             missing_members = {"data", "feature", "times"} - set(group.keys())
@@ -140,9 +190,24 @@ def load_bosch_dataset(directory: str | Path) -> BoschDataset:
                 raise DatasetLoadError(
                     f"BOSCH group {group_name} is missing: {', '.join(sorted(missing_members))}"
                 )
+            data_shape = group["data"].shape
+            if len(data_shape) != 2:
+                raise DatasetLoadError(f"Invalid BOSCH data rank in group {group_name}")
+            run_observations, run_features = data_shape
+            if run_observations > active_limits.max_run_observations:
+                raise DatasetLoadError(
+                    f"BOSCH run observation limit exceeded in group {group_name}"
+                )
+            if run_features > active_limits.max_features:
+                raise DatasetLoadError(f"BOSCH feature limit exceeded in group {group_name}")
+            decoded_cells += run_observations * run_features
+            if decoded_cells > active_limits.max_decoded_cells:
+                raise DatasetLoadError("BOSCH decoded allocation exceeds configured safety limit")
             encoded = np.asarray(group["data"][:])
             features = _decode_strings(np.asarray(group["feature"][:]))
             times = np.asarray(group["times"][:], dtype=np.float64)
+            time_units = _decode_attribute(group["times"].attrs.get("units", "")) or None
+            time_calendar = _decode_attribute(group["times"].attrs.get("calendar", "")) or None
             if encoded.ndim != 2 or encoded.shape != (len(times), len(features)):
                 raise DatasetLoadError(f"Shape mismatch in BOSCH group {group_name}")
             if encoded.size and int(encoded.max()) >= len(decoder):
@@ -173,9 +238,13 @@ def load_bosch_dataset(directory: str | Path) -> BoschDataset:
                         wafer_id=experiment_key,
                         observation_count=len(times),
                         feature_count=len(features),
-                        time_basis=(
-                            "elapsed seconds; calendar origin metadata is inconsistent with values"
-                        ),
+                        time_basis="unqualified NetCDF source coordinate",
+                        extra={
+                            "source_time_units": time_units,
+                            "source_time_calendar": time_calendar,
+                            "source_time_min": float(times.min()) if len(times) else None,
+                            "source_time_max": float(times.max()) if len(times) else None,
+                        },
                     ),
                     elapsed_time_s=times,
                     values=values,
@@ -190,6 +259,10 @@ def load_bosch_dataset(directory: str | Path) -> BoschDataset:
         raise DatasetLoadError(
             f"BOSCH metrology CSV missing columns: {', '.join(sorted(missing_columns))}"
         )
+    if len(metrology) > active_limits.max_tabular_rows:
+        raise DatasetLoadError("BOSCH metrology row count exceeds configured safety limit")
+    if len(metrology.columns) > active_limits.max_tabular_columns:
+        raise DatasetLoadError("BOSCH metrology column count exceeds configured safety limit")
     lot_status = _read_lot_status(source_dir / "Lot_status.xlsx")
     run_keys = {run.metadata.wafer_id for run in runs if run.metadata.wafer_id}
     metrology_keys = set(metrology["experiment_key"].astype(str))
@@ -203,7 +276,7 @@ def load_bosch_dataset(directory: str | Path) -> BoschDataset:
                 message=(
                     "NetCDF declares Unix-epoch seconds, but observed values are short "
                     "elapsed-process "
-                    "durations; values are preserved as elapsed seconds."
+                    "durations; values are preserved as an unqualified source coordinate."
                 ),
                 source_file="Process_data.nc",
             ),
@@ -281,18 +354,26 @@ def load_bosch_dataset(directory: str | Path) -> BoschDataset:
             "Calendar timestamps are not derived from contradictory NetCDF time metadata.",
         ),
     )
+    verify_provenance(provenance, source_dir)
     return BoschDataset(provenance, tuple(runs), metrology, lot_status, validation)
 
 
-def load_phm_dataset(directory: str | Path) -> PhmDataset:
+def load_phm_dataset(directory: str | Path, *, limits: IngestionLimits | None = None) -> PhmDataset:
     source_dir = Path(directory)
+    active_limits = limits or IngestionLimits()
     required = require_files(source_dir, PHM_REQUIRED)
+    _validate_source_files(required, active_limits)
     provenance = build_provenance(
         "phm_ion_mill_2018_compact",
         source_dir,
         required,
         ("Fault-centered subset plus deterministic normal sample; not an unbiased benchmark",),
     )
+    parquet_metadata = pq.ParquetFile(source_dir / "equipment_sensor_data.parquet").metadata
+    if parquet_metadata.num_rows > active_limits.max_tabular_rows:
+        raise DatasetLoadError("PHM Parquet row count exceeds configured safety limit")
+    if parquet_metadata.num_columns > active_limits.max_tabular_columns:
+        raise DatasetLoadError("PHM Parquet column count exceeds configured safety limit")
     try:
         observations = pd.read_parquet(source_dir / "equipment_sensor_data.parquet")
         fault_frame = pd.read_csv(source_dir / "fault_events.csv")
@@ -309,6 +390,8 @@ def load_phm_dataset(directory: str | Path) -> PhmDataset:
             "PHM source schema missing required columns: "
             + ", ".join(sorted(missing_sensor_columns | missing_fault_columns))
         )
+    if len(fault_frame) > active_limits.max_tabular_rows:
+        raise DatasetLoadError("PHM fault row count exceeds configured safety limit")
     issues: list[DataQualityIssue] = []
     for column in PHM_ID_COLUMNS:
         if observations[column].isna().any():
@@ -468,4 +551,5 @@ def load_phm_dataset(directory: str | Path) -> PhmDataset:
             "PHM ion-mill observations are not pooled with BOSCH plasma-etch observations.",
         ),
     )
+    verify_provenance(provenance, source_dir)
     return PhmDataset(provenance, observations, faults, manifest, supplied_validation, validation)

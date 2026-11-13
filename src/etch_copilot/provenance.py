@@ -39,3 +39,16 @@ def build_provenance(
         sha256={item.name: sha256_file(item) for item in ordered},
         extraction_notes=notes,
     )
+
+
+def verify_provenance(provenance: DatasetProvenance, directory: Path) -> None:
+    """Fail closed if any source changed after its initial provenance snapshot."""
+    changed = [
+        filename
+        for filename, expected_hash in provenance.sha256.items()
+        if sha256_file(directory / filename) != expected_hash
+    ]
+    if changed:
+        raise DatasetLoadError(
+            "Source files changed during ingestion: " + ", ".join(sorted(changed))
+        )
