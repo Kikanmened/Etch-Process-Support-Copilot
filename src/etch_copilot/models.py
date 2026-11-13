@@ -23,6 +23,14 @@ class DatasetProvenance(BaseModel):
     extraction_notes: tuple[str, ...] = ()
 
 
+class ScientificReference(BaseModel):
+    reference_id: str
+    source_path: str
+    sha256: str
+    role: str
+    verified: bool
+
+
 class EquipmentIdentifier(BaseModel):
     source_value: str
     normalized_value: str | None = None

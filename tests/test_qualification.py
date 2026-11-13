@@ -44,6 +44,20 @@ def test_bosch_elapsed_time_is_qualified_but_absolute_time_is_blocked(
         assert_analysis_permitted(calendar)
 
 
+def test_unverified_research_pdf_cannot_authorize_experimental_context(
+    bosch_fixture: Path,
+) -> None:
+    research = bosch_fixture.parent / "research"
+    research.mkdir()
+    (research / "Readme.pdf").write_bytes(b"not the verified scientific reference")
+
+    qualification = build_bosch_qualification(load_bosch_dataset(bosch_fixture))
+
+    assert qualification.experimental_context.primary_reference_verified is False
+    assert qualification.experimental_context.process_type is None
+    assert "reference hash is not recognized" in qualification.experimental_context.limitations
+
+
 def test_bosch_missing_time_units_block_elapsed_analysis(bosch_fixture: Path) -> None:
     with h5py.File(bosch_fixture / "Process_data.nc", "r+") as handle:
         del handle["Day_2024_07_02_Wafer_01/times"].attrs["units"]

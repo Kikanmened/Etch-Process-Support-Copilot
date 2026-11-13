@@ -21,6 +21,14 @@ def test_actual_bosch_qualification_findings() -> None:
     assert qualification.metrology.total_site_records == 7_832
     assert qualification.metrology.missing_raw_post_thickness_sites == 157
     assert all(wafer.relationship_unambiguous for wafer in qualification.metrology.wafers)
+    assert qualification.experimental_context.primary_reference_verified
+    assert qualification.experimental_context.process_type == "cyclic BOSCH silicon plasma etch"
+    assert qualification.experimental_context.etch_gas == "SF6"
+    assert qualification.experimental_context.passivation_gas == "C4F8"
+    assert qualification.experimental_context.nominal_cycle_count == 100
+    assert qualification.experimental_context.pre_etch_spatial_measurement_count == 15
+    assert qualification.experimental_context.post_etch_missing_values_were_interpolated
+    assert qualification.experimental_context.evidence[0].source_file == "research/Readme.pdf"
     assert qualification.features.common_feature_count == 31
     assert qualification.features.total_feature_count == 44
     assert qualification.decision(AnalysisId.BOSCH_ETCH_RATE).status is ReadinessStatus.BLOCKED
