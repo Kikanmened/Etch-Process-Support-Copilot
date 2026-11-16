@@ -1,0 +1,28 @@
+{
+  "generator_version": "1.0.0",
+  "scenarios": {
+    "S1": {
+      "expected_evidence_ids": [
+        "ETCH_RATE_SHIFT",
+        "RF_REFLECTION_INCREASE",
+        "POST_MAINTENANCE_TIMING"
+      ],
+      "injected_condition": "lower synthetic removal with elevated RF reflection"
+    },
+    "S2": {
+      "expected_evidence_ids": [
+        "PRESSURE_INSTABILITY",
+        "OUTCOME_VARIABILITY"
+      ],
+      "injected_condition": "pressure oscillation and variable synthetic removal"
+    },
+    "S3": {
+      "expected_evidence_ids": [
+        "DATA_QUALITY_BLOCKED"
+      ],
+      "injected_condition": "invalid metrology"
+    }
+  },
+  "seed": 20261112,
+  "visibility": "test_fixture_only_not_for_application_ingestion_or_genai"
+}

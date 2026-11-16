@@ -1,0 +1,24 @@
+{
+  "baseline_runs_per_scenario": 30,
+  "dataset_id": "synthetic-etch-demo-v1-seed-20261112-cfg-bc358d16b1fa",
+  "etch_duration_s": 120,
+  "files": {
+    "maintenance.csv": "c2f1fe25cfa0f8641b1806cad0d3afa0c5cc211e063932468b5744161fe80dc1",
+    "metrology.csv": "0507e765a0aa42287a8387716ac4142ab7951b5e318bf0e8bd336b17efa7a51f",
+    "runs.csv": "202c4a40245da0a02280b585b99833f11cb10f1acbb2c40bdf95ad897dfb5753",
+    "telemetry.csv": "06aae4018dcca4dbf5506ee494d808717956df59b7089f6fc21f1390104ab0df"
+  },
+  "generated_at_policy": "fixed timestamps derived from scenario and run index; no wall clock",
+  "generator_version": "1.0.0",
+  "incident_runs_per_scenario": 8,
+  "scenario_truth_policy": "separate test fixture; never present in application dataset",
+  "scenarios": [
+    "S1",
+    "S2",
+    "S3"
+  ],
+  "schema_version": "1.0.0",
+  "scientific_scope": "synthetic educational demonstration; not validated plasma physics",
+  "seed": 20261112,
+  "telemetry_interval_s": 5
+}

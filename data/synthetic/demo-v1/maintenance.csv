@@ -1,0 +1,2 @@
+event_id,scenario_id,chamber_id,timestamp_utc,event_type,notes
+M-S1-001,S1,SYN-CHAMBER-S1,2026-01-01T15:25:00Z,synthetic_chamber_maintenance,Synthetic educational event; no real equipment procedure or recipe.
