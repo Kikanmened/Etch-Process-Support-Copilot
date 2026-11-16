@@ -144,6 +144,8 @@ The Phase 5 baseline is **172 passing tests**, including **22 dashboard tests**,
 **94% reported statement coverage** in the provisioned environment. This is a local
 verification result, not a claim of configured CI or cross-platform certification.
 See the [verification record](docs/PHASE_5_VERIFICATION.md) for review findings and measurements.
+See [continuous integration](docs/CONTINUOUS_INTEGRATION.md) for the portable
+166-test GitHub Actions policy and its deliberate external-data boundary.
 
 For reproducible browser captures, install Chromium once, keep the dashboard running
 in another terminal, and use the provisioned research datasets:
