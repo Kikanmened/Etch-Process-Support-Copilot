@@ -136,3 +136,8 @@ input qualification only. SPC control limits and root-cause attribution remain
 BOSCH or PHM qualifications. Phase 3 has no synthetic capability whose evidence
 supports a `LIMITED` decision: each defined input contract is either satisfied
 or blocked. Existing Phase 1.5 and Phase 2 `LIMITED` semantics remain unchanged.
+
+Phase 4 adds separate synthetic candidate SPC contracts documented in
+`SYNTHETIC_SPC_METHOD.md`. It does not change this operational SPC block. Every
+candidate limit is explicitly labelled `synthetic_candidate_not_operational`,
+and BOSCH and PHM SPC remain blocked.

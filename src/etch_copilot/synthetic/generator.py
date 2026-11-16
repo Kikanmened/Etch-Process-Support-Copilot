@@ -20,6 +20,7 @@ from etch_copilot.synthetic.contracts import (
     METROLOGY_COLUMNS,
     RUN_COLUMNS,
     SOURCE_FILENAMES,
+    SYNTHETIC_RUN_INTERVAL_S,
     TELEMETRY_COLUMNS,
     VISIBLE_FILENAMES,
     ScenarioId,
@@ -141,7 +142,7 @@ def _run_rows(config: SyntheticGeneratorConfig) -> list[dict[str, Any]]:
         recipe = "SYN-OXIDE-ETCH-V1"
         scenario_start = _BASE_START + timedelta(days=scenario_index * 10)
         for index in range(run_count):
-            start = scenario_start + timedelta(minutes=index * 15)
+            start = scenario_start + timedelta(seconds=index * SYNTHETIC_RUN_INTERVAL_S)
             end = start + timedelta(seconds=config.etch_duration_s)
             phase = "baseline" if index < config.baseline_runs_per_scenario else "incident"
             event_id = "M-S1-001" if scenario is ScenarioId.S1 and phase == "incident" else ""
