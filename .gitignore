@@ -20,3 +20,7 @@ docs/E-Handbook.pdf
 docs/JCGM_100_2008_E.pdf
 docs/JCGM_200_2012.pdf
 docs/NIST.AI.600-1.pdf
+
+# Scenario truth is test-only; prevent unintended copies elsewhere in the repository.
+scenario_truth.json
+!tests/fixtures/synthetic/demo-v1/scenario_truth.json
