@@ -1,0 +1,1597 @@
+{
+  "demo": {
+    "allowed_analytics": "synthetic candidate SPC only; operational SPC remains blocked",
+    "input_manifest": {
+      "baseline_runs_per_scenario": 30,
+      "dataset_id": "synthetic-etch-demo-v1-seed-20261112-cfg-bc358d16b1fa",
+      "etch_duration_s": 120,
+      "files": {
+        "maintenance.csv": "c2f1fe25cfa0f8641b1806cad0d3afa0c5cc211e063932468b5744161fe80dc1",
+        "metrology.csv": "0507e765a0aa42287a8387716ac4142ab7951b5e318bf0e8bd336b17efa7a51f",
+        "runs.csv": "202c4a40245da0a02280b585b99833f11cb10f1acbb2c40bdf95ad897dfb5753",
+        "telemetry.csv": "06aae4018dcca4dbf5506ee494d808717956df59b7089f6fc21f1390104ab0df"
+      },
+      "generated_at_policy": "fixed timestamps derived from scenario and run index; no wall clock",
+      "generator_version": "1.0.0",
+      "incident_runs_per_scenario": 8,
+      "scenario_truth_policy": "separate test fixture; never present in application dataset",
+      "scenarios": [
+        "S1",
+        "S2",
+        "S3"
+      ],
+      "schema_version": "1.0.0",
+      "scientific_scope": "synthetic educational demonstration; not validated plasma physics",
+      "seed": 20261112,
+      "telemetry_interval_s": 5
+    },
+    "validation": {
+      "baseline_counts": {
+        "S1": 30,
+        "S2": 30,
+        "S3": 30
+      },
+      "dataset_id": "synthetic-etch-demo-v1-seed-20261112-cfg-bc358d16b1fa",
+      "incident_counts": {
+        "S1": 8,
+        "S2": 8,
+        "S3": 8
+      },
+      "issues": [
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:532",
+          "run_id": "S3-R031",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INCONSISTENT_THICKNESS_UNIT",
+          "message": "Thickness unit differs from the declared nanometre contract.",
+          "record_reference": "metrology.csv:532",
+          "run_id": "S3-R031",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:533",
+          "run_id": "S3-R031",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "POST_THICKNESS_EXCEEDS_PRE",
+          "message": "Post-etch thickness exceeds pre-etch thickness.",
+          "record_reference": "metrology.csv:533",
+          "run_id": "S3-R031",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:534",
+          "run_id": "S3-R031",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:535",
+          "run_id": "S3-R031",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:536",
+          "run_id": "S3-R031",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:537",
+          "run_id": "S3-R032",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INCONSISTENT_THICKNESS_UNIT",
+          "message": "Thickness unit differs from the declared nanometre contract.",
+          "record_reference": "metrology.csv:537",
+          "run_id": "S3-R032",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:538",
+          "run_id": "S3-R032",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "POST_THICKNESS_EXCEEDS_PRE",
+          "message": "Post-etch thickness exceeds pre-etch thickness.",
+          "record_reference": "metrology.csv:538",
+          "run_id": "S3-R032",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:539",
+          "run_id": "S3-R032",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:540",
+          "run_id": "S3-R032",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:541",
+          "run_id": "S3-R032",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:542",
+          "run_id": "S3-R033",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INCONSISTENT_THICKNESS_UNIT",
+          "message": "Thickness unit differs from the declared nanometre contract.",
+          "record_reference": "metrology.csv:542",
+          "run_id": "S3-R033",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:543",
+          "run_id": "S3-R033",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "POST_THICKNESS_EXCEEDS_PRE",
+          "message": "Post-etch thickness exceeds pre-etch thickness.",
+          "record_reference": "metrology.csv:543",
+          "run_id": "S3-R033",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:544",
+          "run_id": "S3-R033",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:545",
+          "run_id": "S3-R033",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:546",
+          "run_id": "S3-R033",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:547",
+          "run_id": "S3-R034",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INCONSISTENT_THICKNESS_UNIT",
+          "message": "Thickness unit differs from the declared nanometre contract.",
+          "record_reference": "metrology.csv:547",
+          "run_id": "S3-R034",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:548",
+          "run_id": "S3-R034",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "POST_THICKNESS_EXCEEDS_PRE",
+          "message": "Post-etch thickness exceeds pre-etch thickness.",
+          "record_reference": "metrology.csv:548",
+          "run_id": "S3-R034",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:549",
+          "run_id": "S3-R034",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:550",
+          "run_id": "S3-R034",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:551",
+          "run_id": "S3-R034",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:552",
+          "run_id": "S3-R035",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INCONSISTENT_THICKNESS_UNIT",
+          "message": "Thickness unit differs from the declared nanometre contract.",
+          "record_reference": "metrology.csv:552",
+          "run_id": "S3-R035",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:553",
+          "run_id": "S3-R035",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "POST_THICKNESS_EXCEEDS_PRE",
+          "message": "Post-etch thickness exceeds pre-etch thickness.",
+          "record_reference": "metrology.csv:553",
+          "run_id": "S3-R035",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:554",
+          "run_id": "S3-R035",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:555",
+          "run_id": "S3-R035",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:556",
+          "run_id": "S3-R035",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:557",
+          "run_id": "S3-R036",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INCONSISTENT_THICKNESS_UNIT",
+          "message": "Thickness unit differs from the declared nanometre contract.",
+          "record_reference": "metrology.csv:557",
+          "run_id": "S3-R036",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:558",
+          "run_id": "S3-R036",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "POST_THICKNESS_EXCEEDS_PRE",
+          "message": "Post-etch thickness exceeds pre-etch thickness.",
+          "record_reference": "metrology.csv:558",
+          "run_id": "S3-R036",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:559",
+          "run_id": "S3-R036",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:560",
+          "run_id": "S3-R036",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:561",
+          "run_id": "S3-R036",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:562",
+          "run_id": "S3-R037",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INCONSISTENT_THICKNESS_UNIT",
+          "message": "Thickness unit differs from the declared nanometre contract.",
+          "record_reference": "metrology.csv:562",
+          "run_id": "S3-R037",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:563",
+          "run_id": "S3-R037",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "POST_THICKNESS_EXCEEDS_PRE",
+          "message": "Post-etch thickness exceeds pre-etch thickness.",
+          "record_reference": "metrology.csv:563",
+          "run_id": "S3-R037",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:564",
+          "run_id": "S3-R037",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:565",
+          "run_id": "S3-R037",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:566",
+          "run_id": "S3-R037",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:567",
+          "run_id": "S3-R038",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INCONSISTENT_THICKNESS_UNIT",
+          "message": "Thickness unit differs from the declared nanometre contract.",
+          "record_reference": "metrology.csv:567",
+          "run_id": "S3-R038",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:568",
+          "run_id": "S3-R038",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "POST_THICKNESS_EXCEEDS_PRE",
+          "message": "Post-etch thickness exceeds pre-etch thickness.",
+          "record_reference": "metrology.csv:568",
+          "run_id": "S3-R038",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:569",
+          "run_id": "S3-R038",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:570",
+          "run_id": "S3-R038",
+          "scenario_id": "S3"
+        },
+        {
+          "blocks_metrology": true,
+          "code": "INVALID_MEASUREMENT_STATUS",
+          "message": "Metrology status does not permit engineering interpretation.",
+          "record_reference": "metrology.csv:571",
+          "run_id": "S3-R038",
+          "scenario_id": "S3"
+        }
+      ],
+      "record_counts": {
+        "maintenance": 1,
+        "metrology": 570,
+        "runs": 114,
+        "telemetry": 2850
+      },
+      "structurally_valid": true,
+      "validation_rules": [
+        "exact schema and bounded file sizes",
+        "SHA-256 manifest verification before parsing",
+        "run/scenario referential integrity",
+        "UTC run and telemetry interval consistency",
+        "five fixed metrology sites per run",
+        "scientifically invalid incident metrology remains visible and blocking"
+      ]
+    }
+  },
+  "evidence": {
+    "dataset_kind": "synthetic",
+    "evidence_origin": "synthetic",
+    "export_schema_version": "1.0.0",
+    "results": {
+      "evaluation": {
+        "baseline_id": "db133c0848faeaccd8f021a002a62c7c0bd56dc6ac2b904c0b5d83b5a8f699e1",
+        "capability": "synthetic.spc_incident_evaluation",
+        "dataset_id": "synthetic-etch-demo-v1-seed-20261112-cfg-bc358d16b1fa",
+        "incident_mean": 101.3371715875,
+        "incident_mean_difference": 1.4336484041666608,
+        "incident_observations": [
+          {
+            "etch_rate_nm_per_min": 108.3284248,
+            "limit_scope": "synthetic_candidate_not_operational",
+            "method_version": "1.0.0",
+            "phase": "incident",
+            "run_id": "S2-R031",
+            "scenario_id": "S2",
+            "start_ts_utc": "2026-01-11T15:30:00Z",
+            "valid_site_count": 5,
+            "wafer_id": "S2-W031"
+          },
+          {
+            "etch_rate_nm_per_min": 93.90262139999999,
+            "limit_scope": "synthetic_candidate_not_operational",
+            "method_version": "1.0.0",
+            "phase": "incident",
+            "run_id": "S2-R032",
+            "scenario_id": "S2",
+            "start_ts_utc": "2026-01-11T15:45:00Z",
+            "valid_site_count": 5,
+            "wafer_id": "S2-W032"
+          },
+          {
+            "etch_rate_nm_per_min": 104.5779415,
+            "limit_scope": "synthetic_candidate_not_operational",
+            "method_version": "1.0.0",
+            "phase": "incident",
+            "run_id": "S2-R033",
+            "scenario_id": "S2",
+            "start_ts_utc": "2026-01-11T16:00:00Z",
+            "valid_site_count": 5,
+            "wafer_id": "S2-W033"
+          },
+          {
+            "etch_rate_nm_per_min": 111.7234354,
+            "limit_scope": "synthetic_candidate_not_operational",
+            "method_version": "1.0.0",
+            "phase": "incident",
+            "run_id": "S2-R034",
+            "scenario_id": "S2",
+            "start_ts_utc": "2026-01-11T16:15:00Z",
+            "valid_site_count": 5,
+            "wafer_id": "S2-W034"
+          },
+          {
+            "etch_rate_nm_per_min": 95.7019224,
+            "limit_scope": "synthetic_candidate_not_operational",
+            "method_version": "1.0.0",
+            "phase": "incident",
+            "run_id": "S2-R035",
+            "scenario_id": "S2",
+            "start_ts_utc": "2026-01-11T16:30:00Z",
+            "valid_site_count": 5,
+            "wafer_id": "S2-W035"
+          },
+          {
+            "etch_rate_nm_per_min": 102.95426610000003,
+            "limit_scope": "synthetic_candidate_not_operational",
+            "method_version": "1.0.0",
+            "phase": "incident",
+            "run_id": "S2-R036",
+            "scenario_id": "S2",
+            "start_ts_utc": "2026-01-11T16:45:00Z",
+            "valid_site_count": 5,
+            "wafer_id": "S2-W036"
+          },
+          {
+            "etch_rate_nm_per_min": 89.97036720000001,
+            "limit_scope": "synthetic_candidate_not_operational",
+            "method_version": "1.0.0",
+            "phase": "incident",
+            "run_id": "S2-R037",
+            "scenario_id": "S2",
+            "start_ts_utc": "2026-01-11T17:00:00Z",
+            "valid_site_count": 5,
+            "wafer_id": "S2-W037"
+          },
+          {
+            "etch_rate_nm_per_min": 103.53839389999999,
+            "limit_scope": "synthetic_candidate_not_operational",
+            "method_version": "1.0.0",
+            "phase": "incident",
+            "run_id": "S2-R038",
+            "scenario_id": "S2",
+            "start_ts_utc": "2026-01-11T17:15:00Z",
+            "valid_site_count": 5,
+            "wafer_id": "S2-W038"
+          }
+        ],
+        "individual_signals": [
+          {
+            "chart": "Individuals",
+            "direction": "above_ucl",
+            "limit": 103.79030824386157,
+            "previous_run_id": null,
+            "run_id": "S2-R031",
+            "value": 108.3284248
+          },
+          {
+            "chart": "Individuals",
+            "direction": "below_lcl",
+            "limit": 96.01673812280508,
+            "previous_run_id": null,
+            "run_id": "S2-R032",
+            "value": 93.90262139999999
+          },
+          {
+            "chart": "Individuals",
+            "direction": "above_ucl",
+            "limit": 103.79030824386157,
+            "previous_run_id": null,
+            "run_id": "S2-R033",
+            "value": 104.5779415
+          },
+          {
+            "chart": "Individuals",
+            "direction": "above_ucl",
+            "limit": 103.79030824386157,
+            "previous_run_id": null,
+            "run_id": "S2-R034",
+            "value": 111.7234354
+          },
+          {
+            "chart": "Individuals",
+            "direction": "below_lcl",
+            "limit": 96.01673812280508,
+            "previous_run_id": null,
+            "run_id": "S2-R035",
+            "value": 95.7019224
+          },
+          {
+            "chart": "Individuals",
+            "direction": "below_lcl",
+            "limit": 96.01673812280508,
+            "previous_run_id": null,
+            "run_id": "S2-R037",
+            "value": 89.97036720000001
+          }
+        ],
+        "interpretation_policy": "Signals identify synthetic changes in location or short-term successive variation; they do not confirm a physical root cause, production state, or recipe action.",
+        "limit_scope": "synthetic_candidate_not_operational",
+        "method_version": "1.0.0",
+        "moving_range_signals": [
+          {
+            "chart": "Moving Range",
+            "direction": "above_ucl",
+            "limit": 4.774495674072415,
+            "previous_run_id": "S2-R030",
+            "run_id": "S2-R031",
+            "value": 7.784372100000027
+          },
+          {
+            "chart": "Moving Range",
+            "direction": "above_ucl",
+            "limit": 4.774495674072415,
+            "previous_run_id": "S2-R031",
+            "run_id": "S2-R032",
+            "value": 14.425803400000007
+          },
+          {
+            "chart": "Moving Range",
+            "direction": "above_ucl",
+            "limit": 4.774495674072415,
+            "previous_run_id": "S2-R032",
+            "run_id": "S2-R033",
+            "value": 10.675320100000008
+          },
+          {
+            "chart": "Moving Range",
+            "direction": "above_ucl",
+            "limit": 4.774495674072415,
+            "previous_run_id": "S2-R033",
+            "run_id": "S2-R034",
+            "value": 7.145493900000005
+          },
+          {
+            "chart": "Moving Range",
+            "direction": "above_ucl",
+            "limit": 4.774495674072415,
+            "previous_run_id": "S2-R034",
+            "run_id": "S2-R035",
+            "value": 16.021513
+          },
+          {
+            "chart": "Moving Range",
+            "direction": "above_ucl",
+            "limit": 4.774495674072415,
+            "previous_run_id": "S2-R035",
+            "run_id": "S2-R036",
+            "value": 7.252343700000026
+          },
+          {
+            "chart": "Moving Range",
+            "direction": "above_ucl",
+            "limit": 4.774495674072415,
+            "previous_run_id": "S2-R036",
+            "run_id": "S2-R037",
+            "value": 12.983898900000014
+          },
+          {
+            "chart": "Moving Range",
+            "direction": "above_ucl",
+            "limit": 4.774495674072415,
+            "previous_run_id": "S2-R037",
+            "run_id": "S2-R038",
+            "value": 13.568026699999976
+          }
+        ],
+        "operational_control_limits_status": "BLOCKED",
+        "scenario_id": "S2",
+        "source_digests": [
+          {
+            "sha256": "791263e8cab3585b30f499d8137a61ef912b53674fd69b4457d8c9c26b574752",
+            "source_file": "dataset_manifest.json"
+          },
+          {
+            "sha256": "c2f1fe25cfa0f8641b1806cad0d3afa0c5cc211e063932468b5744161fe80dc1",
+            "source_file": "maintenance.csv"
+          },
+          {
+            "sha256": "0507e765a0aa42287a8387716ac4142ab7951b5e318bf0e8bd336b17efa7a51f",
+            "source_file": "metrology.csv"
+          },
+          {
+            "sha256": "202c4a40245da0a02280b585b99833f11cb10f1acbb2c40bdf95ad897dfb5753",
+            "source_file": "runs.csv"
+          },
+          {
+            "sha256": "06aae4018dcca4dbf5506ee494d808717956df59b7089f6fc21f1390104ab0df",
+            "source_file": "telemetry.csv"
+          }
+        ],
+        "status": "SUPPORTED",
+        "transitions": [
+          {
+            "current_run_id": "S2-R031",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 7.784372100000027,
+            "moving_range_signal": true,
+            "previous_run_id": "S2-R030",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R032",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 14.425803400000007,
+            "moving_range_signal": true,
+            "previous_run_id": "S2-R031",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R033",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 10.675320100000008,
+            "moving_range_signal": true,
+            "previous_run_id": "S2-R032",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R034",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 7.145493900000005,
+            "moving_range_signal": true,
+            "previous_run_id": "S2-R033",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R035",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 16.021513,
+            "moving_range_signal": true,
+            "previous_run_id": "S2-R034",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R036",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 7.252343700000026,
+            "moving_range_signal": true,
+            "previous_run_id": "S2-R035",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R037",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 12.983898900000014,
+            "moving_range_signal": true,
+            "previous_run_id": "S2-R036",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R038",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 13.568026699999976,
+            "moving_range_signal": true,
+            "previous_run_id": "S2-R037",
+            "reasons": [
+              "continuity verified"
+            ]
+          }
+        ]
+      },
+      "qualification": {
+        "baseline": {
+          "baseline_id": "db133c0848faeaccd8f021a002a62c7c0bd56dc6ac2b904c0b5d83b5a8f699e1",
+          "dataset_id": "synthetic-etch-demo-v1-seed-20261112-cfg-bc358d16b1fa",
+          "dependence": {
+            "lag1_autocorrelation": 0.04625992371306052,
+            "limitation": "Lag-1 screening cannot prove independence or exclude higher-order dependence, drift, mixtures, or seasonality.",
+            "method": "lag-1 sample autocorrelation with approximate ±1.96/sqrt(n) screening bound",
+            "observation_count": 30,
+            "outcome": "PASS",
+            "screening_bound": 0.3578454042367085
+          },
+          "interpretation_policy": "Synthetic candidate I-MR parameters are frozen for method evaluation only; they are not operational control limits or specifications.",
+          "limit_scope": "synthetic_candidate_not_operational",
+          "limits": {
+            "average_moving_range": 1.461431182758621,
+            "center_line": 99.90352318333333,
+            "d2": 1.128,
+            "d3": 0.0,
+            "d4": 3.267,
+            "individual_lcl": 96.01673812280508,
+            "individual_ucl": 103.79030824386157,
+            "limit_scope": "synthetic_candidate_not_operational",
+            "method_version": "1.0.0",
+            "moving_range_lcl": 0.0,
+            "moving_range_ucl": 4.774495674072415,
+            "moving_ranges": [
+              1.64059559999999,
+              1.736606800000013,
+              1.01727190000002,
+              0.8753238000000149,
+              0.9949482999999926,
+              1.497291099999998,
+              0.34959469999999937,
+              1.4262090000000007,
+              1.1390461000000214,
+              2.280251500000003,
+              0.7689624000000052,
+              1.1163261999999898,
+              2.727665800000025,
+              2.0355737000000267,
+              0.6683671999999949,
+              0.6827620999999777,
+              0.4344422999999863,
+              1.3885423000000157,
+              2.945442900000006,
+              2.6258220000000008,
+              0.060504000000028826,
+              2.8618645999999677,
+              1.1381484000000137,
+              3.774735600000029,
+              0.6606828999999567,
+              3.036718099999972,
+              1.249491299999984,
+              1.0562428000000008,
+              0.19207089999997695
+            ],
+            "observation_count": 30,
+            "sample_standard_deviation": 1.260848126328382,
+            "sigma_moving_range": 1.2955950201760824,
+            "standard_deviation_individual_lcl": 96.1209788043482,
+            "standard_deviation_individual_ucl": 103.68606756231847
+          },
+          "method_version": "1.0.0",
+          "nominal_sampling_interval_s": 900.0,
+          "observation_count": 30,
+          "observations": [
+            {
+              "etch_rate_nm_per_min": 99.96958140000001,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R001",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T08:00:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W001"
+            },
+            {
+              "etch_rate_nm_per_min": 101.61017700000001,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R002",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T08:15:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W002"
+            },
+            {
+              "etch_rate_nm_per_min": 99.87357019999999,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R003",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T08:30:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W003"
+            },
+            {
+              "etch_rate_nm_per_min": 100.89084210000001,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R004",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T08:45:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W004"
+            },
+            {
+              "etch_rate_nm_per_min": 100.0155183,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R005",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T09:00:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W005"
+            },
+            {
+              "etch_rate_nm_per_min": 99.02057,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R006",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T09:15:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W006"
+            },
+            {
+              "etch_rate_nm_per_min": 100.5178611,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R007",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T09:30:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W007"
+            },
+            {
+              "etch_rate_nm_per_min": 100.8674558,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R008",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T09:45:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W008"
+            },
+            {
+              "etch_rate_nm_per_min": 102.2936648,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R009",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T10:00:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W009"
+            },
+            {
+              "etch_rate_nm_per_min": 101.15461869999999,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R010",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T10:15:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W010"
+            },
+            {
+              "etch_rate_nm_per_min": 98.87436719999998,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R011",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T10:30:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W011"
+            },
+            {
+              "etch_rate_nm_per_min": 99.64332959999999,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R012",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T10:45:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W012"
+            },
+            {
+              "etch_rate_nm_per_min": 98.5270034,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R013",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T11:00:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W013"
+            },
+            {
+              "etch_rate_nm_per_min": 101.25466920000002,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R014",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T11:15:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W014"
+            },
+            {
+              "etch_rate_nm_per_min": 99.2190955,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R015",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T11:30:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W015"
+            },
+            {
+              "etch_rate_nm_per_min": 99.88746269999999,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R016",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T11:45:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W016"
+            },
+            {
+              "etch_rate_nm_per_min": 99.20470060000001,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R017",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T12:00:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W017"
+            },
+            {
+              "etch_rate_nm_per_min": 99.6391429,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R018",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T12:15:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W018"
+            },
+            {
+              "etch_rate_nm_per_min": 101.02768520000001,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R019",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T12:30:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W019"
+            },
+            {
+              "etch_rate_nm_per_min": 98.0822423,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R020",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T12:45:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W020"
+            },
+            {
+              "etch_rate_nm_per_min": 100.7080643,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R021",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T13:00:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W021"
+            },
+            {
+              "etch_rate_nm_per_min": 100.64756029999998,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R022",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T13:15:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W022"
+            },
+            {
+              "etch_rate_nm_per_min": 97.7856957,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R023",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T13:30:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W023"
+            },
+            {
+              "etch_rate_nm_per_min": 96.6475473,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R024",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T13:45:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W024"
+            },
+            {
+              "etch_rate_nm_per_min": 100.42228290000003,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R025",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T14:00:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W025"
+            },
+            {
+              "etch_rate_nm_per_min": 101.08296579999998,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R026",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T14:15:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W026"
+            },
+            {
+              "etch_rate_nm_per_min": 98.04624770000001,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R027",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T14:30:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W027"
+            },
+            {
+              "etch_rate_nm_per_min": 99.295739,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R028",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T14:45:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W028"
+            },
+            {
+              "etch_rate_nm_per_min": 100.35198179999999,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R029",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T15:00:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W029"
+            },
+            {
+              "etch_rate_nm_per_min": 100.54405269999997,
+              "limit_scope": "synthetic_candidate_not_operational",
+              "method_version": "1.0.0",
+              "phase": "baseline",
+              "run_id": "S2-R030",
+              "scenario_id": "S2",
+              "start_ts_utc": "2026-01-11T15:15:00Z",
+              "valid_site_count": 5,
+              "wafer_id": "S2-W030"
+            }
+          ],
+          "scenario_id": "S2",
+          "source_digests": [
+            {
+              "sha256": "791263e8cab3585b30f499d8137a61ef912b53674fd69b4457d8c9c26b574752",
+              "source_file": "dataset_manifest.json"
+            },
+            {
+              "sha256": "c2f1fe25cfa0f8641b1806cad0d3afa0c5cc211e063932468b5744161fe80dc1",
+              "source_file": "maintenance.csv"
+            },
+            {
+              "sha256": "0507e765a0aa42287a8387716ac4142ab7951b5e318bf0e8bd336b17efa7a51f",
+              "source_file": "metrology.csv"
+            },
+            {
+              "sha256": "202c4a40245da0a02280b585b99833f11cb10f1acbb2c40bdf95ad897dfb5753",
+              "source_file": "runs.csv"
+            },
+            {
+              "sha256": "06aae4018dcca4dbf5506ee494d808717956df59b7089f6fc21f1390104ab0df",
+              "source_file": "telemetry.csv"
+            }
+          ]
+        },
+        "baseline_transitions": [
+          {
+            "current_run_id": "S2-R002",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 1.6405955999999975,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R001",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R003",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 1.7366068000000183,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R002",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R004",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 1.0172719000000257,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R003",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R005",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 0.8753238000000181,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R004",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R006",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 0.9949482999999901,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R005",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R007",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 1.4972910999999982,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R006",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R008",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 0.34959469999999726,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R007",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R009",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 1.426209,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R008",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R010",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 1.1390461000000158,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R009",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R011",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 2.2802515000000056,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R010",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R012",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 0.7689624000000066,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R011",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R013",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 1.116326199999989,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R012",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R014",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 2.7276658000000253,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R013",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R015",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 2.035573700000029,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R014",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R016",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 0.6683671999999916,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R015",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R017",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 0.6827620999999766,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R016",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R018",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 0.4344422999999864,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R017",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R019",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 1.3885423000000117,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R018",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R020",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 2.9454429000000033,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R019",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R021",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 2.6258219999999994,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R020",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R022",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 0.060504000000022984,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R021",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R023",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 2.8618645999999757,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R022",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R024",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 1.1381484000000057,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R023",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R025",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 3.774735600000028,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R024",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R026",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 0.660682899999955,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R025",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R027",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 3.036718099999973,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R026",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R028",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 1.2494912999999883,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R027",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R029",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 1.0562427999999926,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R028",
+            "reasons": [
+              "continuity verified"
+            ]
+          },
+          {
+            "current_run_id": "S2-R030",
+            "disposition": "CONTINUITY_VERIFIED",
+            "moving_range": 0.19207089999997606,
+            "moving_range_signal": false,
+            "previous_run_id": "S2-R029",
+            "reasons": [
+              "continuity verified"
+            ]
+          }
+        ],
+        "capability": "synthetic.spc_candidate_limits",
+        "dataset_id": "synthetic-etch-demo-v1-seed-20261112-cfg-bc358d16b1fa",
+        "dependence": {
+          "lag1_autocorrelation": 0.04625992371306052,
+          "limitation": "Lag-1 screening cannot prove independence or exclude higher-order dependence, drift, mixtures, or seasonality.",
+          "method": "lag-1 sample autocorrelation with approximate ±1.96/sqrt(n) screening bound",
+          "observation_count": 30,
+          "outcome": "PASS",
+          "screening_bound": 0.3578454042367085
+        },
+        "interpretation_policy": "Admission qualifies only a synthetic candidate SPC method. Operational control limits, capability, and physical root-cause conclusions remain blocked.",
+        "issues": [],
+        "limit_scope": "synthetic_candidate_not_operational",
+        "method_version": "1.0.0",
+        "observation_count": 30,
+        "operational_control_limits_status": "BLOCKED",
+        "scenario_id": "S2",
+        "status": "SUPPORTED"
+      }
+    },
+    "sources": [
+      {
+        "sha256": "791263e8cab3585b30f499d8137a61ef912b53674fd69b4457d8c9c26b574752",
+        "source_file": "dataset_manifest.json",
+        "status": "verified"
+      },
+      {
+        "sha256": "c2f1fe25cfa0f8641b1806cad0d3afa0c5cc211e063932468b5744161fe80dc1",
+        "source_file": "maintenance.csv",
+        "status": "verified"
+      },
+      {
+        "sha256": "0507e765a0aa42287a8387716ac4142ab7951b5e318bf0e8bd336b17efa7a51f",
+        "source_file": "metrology.csv",
+        "status": "verified"
+      },
+      {
+        "sha256": "202c4a40245da0a02280b585b99833f11cb10f1acbb2c40bdf95ad897dfb5753",
+        "source_file": "runs.csv",
+        "status": "verified"
+      },
+      {
+        "sha256": "06aae4018dcca4dbf5506ee494d808717956df59b7089f6fc21f1390104ab0df",
+        "source_file": "telemetry.csv",
+        "status": "verified"
+      }
+    ]
+  }
+}

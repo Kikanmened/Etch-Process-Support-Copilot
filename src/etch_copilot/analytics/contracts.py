@@ -169,6 +169,11 @@ class PhmFeatureInventoryResult(AnalysisContext):
     sampling_bias: str
 
 
+class PhmSensorSeries(FrozenResult):
+    source_name: str
+    recorded_values: tuple[float | None, ...]
+
+
 class CategoryCount(FrozenResult):
     category: str | None
     count: int
@@ -183,6 +188,19 @@ class FaultEventRecord(FrozenResult):
     coordinate_unit: str | None
     is_confirmed_fault_onset: bool
     missing_fields: tuple[str, ...]
+
+
+class PhmSensorTrendResult(AnalysisContext):
+    source_equipment_ids: tuple[str, ...]
+    canonical_equipment_id: str | None
+    coordinate_name: str
+    coordinate_unit: str | None
+    coordinate_semantics: str
+    source_coordinates: tuple[int, ...]
+    discontinuity_after_indices: tuple[int, ...]
+    series: tuple[PhmSensorSeries, ...]
+    events: tuple[FaultEventRecord, ...]
+    event_semantics: str
 
 
 class PhmFaultInventoryResult(AnalysisContext):

@@ -1033,8 +1033,10 @@ def build_phm_qualification(dataset: PhmDataset) -> PhmQualification:
         timezone=None,
         event_semantics="recorded equipment event or shutdown; not verified fault onset",
         extraction_bias=(
-            "30-minute pre-event and 10-minute post-event windows plus a deterministic "
-            "2% background sample"
+            "source extraction documentation labels sampling as 30-minute pre-event and "
+            "10-minute post-event windows plus a deterministic 2% background sample; the "
+            "coordinate unit is unresolved, so those labels are provenance only and are not "
+            "used as duration windows."
         ),
         permitted_uses=("raw-coordinate ordering", "event inventory", "nearest coordinate lookup"),
         blocked_uses=(

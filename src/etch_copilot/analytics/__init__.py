@@ -7,7 +7,11 @@ from etch_copilot.analytics.bosch import (
     bosch_sensor_statistics,
 )
 from etch_copilot.analytics.contracts import AnalyticsScopeError
-from etch_copilot.analytics.phm import phm_fault_inventory, phm_feature_inventory
+from etch_copilot.analytics.phm import (
+    phm_fault_inventory,
+    phm_feature_inventory,
+    phm_sensor_trend,
+)
 
 __all__ = [
     "AnalyticsScopeError",
@@ -17,4 +21,5 @@ __all__ = [
     "bosch_sensor_statistics",
     "phm_fault_inventory",
     "phm_feature_inventory",
+    "phm_sensor_trend",
 ]

@@ -60,6 +60,23 @@ readers. Unintended truth-file copies are Git-ignored; the approved fixture stay
 | PHM | `phm_feature_inventory`, `phm_fault_inventory` | Missingness, retained duplicates, recorded event categories |
 | Provenance | SHA-256 verification of fixed sources | Sanitized deterministic JSON; logical source names and explicit absence |
 
+## Implemented page contract
+
+The current Streamlit surface has five pages and no public HTTP routes. The controls below
+are the complete user-facing action set:
+
+| Page | User action | Service operation | External data required |
+| --- | --- | --- | --- |
+| Overview & readiness | Verify engineering readiness | `DashboardService.readiness` | No for synthetic; BOSCH/PHM only when selected |
+| BOSCH process evidence | Discover, then analyze a run/feature | `catalog` + `DashboardService.bosch` | BOSCH files |
+| Synthetic SPC investigations | Run S1, S2 or S3 candidate investigation | `DashboardService.synthetic` | No; committed fixture |
+| PHM equipment evidence | Discover, then analyze equipment | `catalog` + `DashboardService.phm` | PHM files |
+| Provenance & JSON exports | Download verified JSON from retained evidence | `DashboardService.export` | Same sources as selected evidence |
+
+S1 and S3 are expected refusal demonstrations for the committed fixture; S2 is the
+admitted synthetic candidate path. A download is available only after an analysis has
+created retained evidence, and the service rechecks source fingerprints at download time.
+
 The overview preserves the Phase 3 input-qualification contract verbatim, including its
 historical SPC restriction; Phase 4 candidate admission is shown separately. Input
 readiness does not authorize operational SPC. Outcome labels and signal counts are

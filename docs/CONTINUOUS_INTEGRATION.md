@@ -46,3 +46,14 @@ The workflow validates portable code quality. It does not change any scientific
 readiness decision or substitute for the provisioned release checks. A workflow file in
 the repository is not evidence of a passing run; use the pull request's exact-commit check
 conclusion as the public CI result.
+
+## Current local verification
+
+On 2026-11-22, the current local checkout completed the portable command
+`.venv/bin/pytest -q -m "not integration"` with **167 passed, 6 deselected** in 15.02
+seconds. This is local evidence only; it is not a GitHub Actions result and does not
+replace checking the exact commit's public workflow conclusion.
+
+The same checkout also passed `.venv/bin/ruff format --check .`,
+`.venv/bin/ruff check .`, and `.venv/bin/mypy src` (27 source files). These results are
+documented as a local verification snapshot and should be rerun after subsequent changes.

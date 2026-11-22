@@ -10,13 +10,23 @@ pytest.importorskip("plotly")
 
 from streamlit.testing.v1 import AppTest
 
-from etch_copilot.dashboard.charts import candidate_charts, trend_chart
+from etch_copilot.dashboard.charts import candidate_charts, phm_sensor_chart, trend_chart
 from etch_copilot.dashboard.service import ROOT, DashboardService
 
 
 def test_scenario_switching_and_exports() -> None:
     app = AppTest.from_file(ROOT / "streamlit_app.py", default_timeout=30).run()
     assert not app.exception
+    assert any("Initial startup availability check" in item.value for item in app.caption)
+    assert any(
+        "SYNTHETIC: local directory present — not yet verified" in item.value
+        for item in app.text
+    )
+    app.button[0].click().run()
+    assert any(
+        "SYNTHETIC: verified — contents and availability reverified" in item.value
+        for item in app.text
+    )
     app.sidebar.radio[0].set_value("Synthetic SPC investigations").run()
     app.button[0].click().run()
     assert not app.error
@@ -59,6 +69,8 @@ def test_trend_keeps_transition_break() -> None:
     )
     assert list(figure.data[0].y) == [1.0, 2.0, None, None, 4.0]
     assert figure.data[0].connectgaps is False
+    assert figure.layout.paper_bgcolor is None
+    assert figure.layout.plot_bgcolor is None
 
 
 def test_unverified_units_and_candidate_boundaries() -> None:
@@ -80,6 +92,42 @@ def test_unverified_units_and_candidate_boundaries() -> None:
     figures = candidate_charts(q, e)
     assert figures[0].data[1].y[1] is None
     assert figures[1].data[1].y[1] is None
+
+
+def test_phm_chart_uses_separate_panels_raw_coordinates_and_visible_gaps() -> None:
+    figure = phm_sensor_chart(
+        {
+            "source_coordinates": [100, 110, 120, 500],
+            "discontinuity_after_indices": [2],
+            "series": [
+                {
+                    "source_name": "ETCHBEAMCURRENT",
+                    "recorded_values": [0.4, None, 0.6, 0.5],
+                },
+                {
+                    "source_name": "ETCHBEAMVOLTAGE",
+                    "recorded_values": [0.7, 0.8, 0.9, 0.85],
+                },
+            ],
+            "events": [
+                {
+                    "source_coordinate": 110,
+                    "category": "recorded shutdown",
+                    "is_confirmed_fault_onset": False,
+                }
+            ],
+        }
+    )
+
+    assert figure.data[0].name == "ETCHBEAMCURRENT"
+    assert figure.data[0].connectgaps is False
+    assert list(figure.data[0].x) == [100, 110, 120, 120, 500]
+    assert list(figure.data[0].y) == [0.4, None, 0.6, None, 0.5]
+    assert figure.data[1].name == "ETCHBEAMVOLTAGE"
+    assert figure.data[1].yaxis == "y2"
+    assert any(shape.x0 == 110 and shape.x1 == 110 for shape in figure.layout.shapes)
+    assert "unit unresolved" in figure.layout.xaxis2.title.text
+    assert "recorded events; not verified fault onset" in figure.layout.title.text
 
 
 def test_missing_dataset_and_session_isolation(
