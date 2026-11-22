@@ -38,6 +38,8 @@ uv sync --frozen --python 3.12 --extra dashboard --extra dashboard-test
 The same flow works without BOSCH or PHM downloads; missing external datasets are shown
 as unavailable rather than fetched automatically.
 
+For visual captures with captions, see the [dashboard walkthrough](docs/DASHBOARD_WALKTHROUGH.md).
+
 ## Repository and verification status
 
 This documentation audit started from local branch `feature/github-actions-ci` at
