@@ -8,6 +8,20 @@ with a local engineering dashboard.
 The current implementation is deterministic software, not a GenAI assistant. It does
 not control equipment, recommend recipes or confirm physical root cause.
 
+## Repository and verification status
+
+This documentation audit started from local branch `feature/github-actions-ci` at
+commit `dd21baf` (`ci: add portable engineering validation workflow`). The working tree
+was clean and the branch was neither ahead of nor behind its locally cached upstream
+reference. That is a local Git observation, not a fresh check of the remote repository.
+
+The repository contains a pull-request workflow for portable verification. Its presence
+does not by itself prove that GitHub Actions passed for this commit. This README therefore
+does not claim a current public CI result; verify the exact commit and conclusion in the
+pull request's checks before relying on it. The [continuous integration policy](docs/CONTINUOUS_INTEGRATION.md)
+defines what the workflow runs, while the [Phase 5 verification record](docs/PHASE_5_VERIFICATION.md)
+preserves separately dated, provisioned local evidence.
+
 ## Engineering workspace
 
 | Section | What an engineer can inspect |
@@ -140,12 +154,12 @@ After provisioning the optional research datasets, run the complete suite:
 .venv/bin/python scripts/benchmark_dashboard.py
 ```
 
-The Phase 5 baseline is **172 passing tests**, including **22 dashboard tests**, with
-**94% reported statement coverage** in the provisioned environment. This is a local
-verification result, not a claim of configured CI or cross-platform certification.
+The dated Phase 5 baseline recorded **172 passing tests**, including **22 dashboard
+tests**, with **94% reported statement coverage** in its provisioned environment. Those
+numbers describe that recorded snapshot; they are not a current-branch or CI result.
 See the [verification record](docs/PHASE_5_VERIFICATION.md) for review findings and measurements.
-See [continuous integration](docs/CONTINUOUS_INTEGRATION.md) for the portable
-166-test GitHub Actions policy and its deliberate external-data boundary.
+See [continuous integration](docs/CONTINUOUS_INTEGRATION.md) for the portable GitHub
+Actions policy and its deliberate external-data boundary.
 
 For reproducible browser captures, install Chromium once, keep the dashboard running
 in another terminal, and use the provisioned research datasets:
