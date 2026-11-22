@@ -4,6 +4,11 @@ Verified locally on 2026-11-16, Python 3.12.13, macOS ARM64.
 Implementation snapshot reviewed on `feature/phase-5-engineering-dashboard` before
 controlled Git integration. The results below describe that dated local verification.
 
+This is intentionally a historical record. The later documentation audit began on
+`feature/github-actions-ci` at local commit `dd21baf`; it did not rerun or retroactively
+attach these Phase 5 results to that commit. Consult the root README and an exact-commit
+CI check for current status.
+
 ## Delivered
 
 All five read-only Streamlit sections are implemented through the public backend APIs:
