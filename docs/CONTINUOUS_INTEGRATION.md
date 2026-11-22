@@ -53,3 +53,7 @@ On 2026-11-22, the current local checkout completed the portable command
 `.venv/bin/pytest -q -m "not integration"` with **166 passed, 6 deselected** in 13.51
 seconds. This is local evidence only; it is not a GitHub Actions result and does not
 replace checking the exact commit's public workflow conclusion.
+
+The same checkout also passed `.venv/bin/ruff format --check .`,
+`.venv/bin/ruff check .`, and `.venv/bin/mypy src` (27 source files). These results are
+documented as a local verification snapshot and should be rerun after subsequent changes.
