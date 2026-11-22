@@ -39,6 +39,9 @@ The same flow works without BOSCH or PHM downloads; missing external datasets ar
 as unavailable rather than fetched automatically.
 
 For visual captures with captions, see the [dashboard walkthrough](docs/DASHBOARD_WALKTHROUGH.md).
+For a command-line path, run the [deterministic demo](docs/examples/README.md) to
+regenerate the committed [S2 evidence artifact](docs/examples/synthetic-s2-evidence.json)
+from the manifest and validation result.
 
 ## Repository and verification status
 
