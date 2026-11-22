@@ -13,7 +13,15 @@ disableDataExport = true
 
 [theme]
 base = "light"
+
+[theme.light]
 primaryColor = "#087e8b"
 backgroundColor = "#ffffff"
 secondaryBackgroundColor = "#f2f5f8"
 textColor = "#172b4d"
+
+[theme.dark]
+primaryColor = "#37b7c3"
+backgroundColor = "#0e1117"
+secondaryBackgroundColor = "#1b2430"
+textColor = "#f2f5f8"

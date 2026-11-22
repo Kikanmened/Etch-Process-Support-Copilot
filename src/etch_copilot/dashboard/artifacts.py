@@ -16,6 +16,9 @@ NAMES = frozenset(
         "synthetic-s2-desktop.png",
         "synthetic-s2-768.png",
         "synthetic-s2-390.png",
+        "phm-desktop.png",
+        "phm-768.png",
+        "phm-390.png",
     }
 )
 

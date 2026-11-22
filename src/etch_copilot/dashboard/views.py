@@ -171,6 +171,9 @@ FIELDS = frozenset(
         "source_equipment_id",
         "source_coordinate",
         "is_confirmed_fault_onset",
+        "source_coordinates",
+        "series",
+        "recorded_values",
     ]
 )
 

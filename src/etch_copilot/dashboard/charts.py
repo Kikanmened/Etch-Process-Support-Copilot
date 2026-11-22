@@ -3,6 +3,7 @@
 from typing import Any
 
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from etch_copilot.dashboard.views import select_indices
 
@@ -40,8 +41,68 @@ def trend_chart(trend: dict[str, Any]) -> Any:
                 else "units unverified"
             )
         ),
-        template="plotly_white",
         height=430,
+    )
+    return figure
+
+
+def phm_sensor_chart(trend: dict[str, Any]) -> Any:
+    """Render raw-coordinate PHM fields without implying duration or fault onset."""
+    figure = make_subplots(
+        rows=2,
+        cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.12,
+        subplot_titles=[series["source_name"] for series in trend["series"]],
+    )
+    boundaries = set(trend["discontinuity_after_indices"])
+    coordinates = trend["source_coordinates"]
+    for row, series in enumerate(trend["series"], start=1):
+        x: list[int] = []
+        y: list[float | None] = []
+        for index, (coordinate, value) in enumerate(
+            zip(coordinates, series["recorded_values"], strict=True)
+        ):
+            x.append(coordinate)
+            y.append(value)
+            if index in boundaries:
+                x.append(coordinate)
+                y.append(None)
+        figure.add_trace(
+            go.Scattergl(
+                x=x,
+                y=y,
+                mode="lines",
+                connectgaps=False,
+                name=series["source_name"],
+                line={"color": "#087e8b" if row == 1 else "#8056a5", "width": 1.4},
+                hovertemplate="source coordinate=%{x}<br>recorded value=%{y}<extra></extra>",
+            ),
+            row=row,
+            col=1,
+        )
+    for event in trend["events"]:
+        coordinate = event.get("source_coordinate")
+        if coordinate is not None:
+            figure.add_vline(
+                x=coordinate,
+                line={"color": "#b42318", "dash": "dot", "width": 1},
+                row="all",
+                col=1,
+            )
+    figure.update_xaxes(title_text="Raw source coordinate (unit unresolved)", row=2, col=1)
+    figure.update_yaxes(title_text="Recorded value<br>(unit unresolved)", row=1, col=1)
+    figure.update_yaxes(title_text="Recorded value<br>(unit unresolved)", row=2, col=1)
+    figure.update_layout(
+        title=(
+            "PHM recorded sensor evidence<br>raw source coordinates"
+            "<br><span style='font-size:11px;color:#b42318'>"
+            "Red dotted markers: recorded events; not verified fault onset</span>"
+        ),
+        height=680,
+        margin={"l": 70, "r": 25, "t": 130, "b": 65},
+        showlegend=False,
+        hovermode="x unified",
     )
     return figure
 
@@ -122,7 +183,6 @@ def candidate_charts(qualification: dict[str, Any], evaluation: dict[str, Any]) 
             title=f"Synthetic candidate SPC<br>{label} · not operational",
             xaxis_title="Ordered synthetic run ID",
             yaxis_title="nm/min",
-            template="plotly_white",
             height=600,
             margin={"l": 55, "r": 20, "t": 85, "b": 180},
             legend={"orientation": "h", "x": 0, "y": -0.4},

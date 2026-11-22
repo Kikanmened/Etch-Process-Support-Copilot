@@ -8,6 +8,57 @@ with a local engineering dashboard.
 The current implementation is deterministic software, not a GenAI assistant. It does
 not control equipment, recommend recipes or confirm physical root cause.
 
+## What this does not claim
+
+“Copilot” is the project name, not a claim that the dashboard uses generative AI. This
+repository does not provide a chat assistant, RAG system, autonomous diagnosis, recipe
+recommendation, equipment control, production control limits or physical root-cause
+confirmation. It presents qualified evidence and deterministic calculations for a local,
+trusted-user engineering workspace.
+
+## 60-second dashboard walkthrough
+
+Start the local dashboard with the command below, then follow this path using only the
+committed synthetic fixture:
+
+```sh
+uv sync --frozen --python 3.12 --extra dashboard --extra dashboard-test
+.venv/bin/streamlit run streamlit_app.py
+```
+
+1. Open **Overview & readiness**, select **synthetic**, and verify engineering readiness.
+2. Open **Synthetic SPC investigations**, select **S2**, and run the candidate
+   investigation. This is the admitted synthetic scenario and shows frozen candidate
+   I-MR evidence, signals and estimator comparison.
+3. Run **S1** and **S3** to see deterministic refusal explanations for baseline admission
+   and invalid metrology.
+4. Open **Provenance & JSON exports** to inspect or download the freshness-checked,
+   sanitized evidence projection.
+
+The same flow works without BOSCH or PHM downloads; missing external datasets are shown
+as unavailable rather than fetched automatically.
+
+For visual captures with captions, see the [dashboard walkthrough](docs/DASHBOARD_WALKTHROUGH.md).
+For a command-line path, run the [deterministic demo](docs/examples/README.md) to
+regenerate the committed [S2 evidence artifact](docs/examples/synthetic-s2-evidence.json)
+from the manifest and validation result.
+
+### PHM responsive chart preview
+
+The PHM view presents `ETCHBEAMCURRENT` and `ETCHBEAMVOLTAGE` in separate panels using
+raw source coordinates. Gaps remain visible, and red dotted markers identify recorded
+events without claiming fault onset, causality, duration semantics or calendar time.
+
+![PHM dashboard desktop view](data/processed/dashboard/phm-desktop.png)
+
+Tablet view:
+
+![PHM dashboard tablet view](data/processed/dashboard/phm-768.png)
+
+Mobile view:
+
+![PHM dashboard mobile view](data/processed/dashboard/phm-390.png)
+
 ## Repository and verification status
 
 This documentation audit started from local branch `feature/github-actions-ci` at
@@ -46,6 +97,19 @@ Qualification contracts, source validation and SHA-256 provenance
                   |
 Local research datasets / committed public synthetic fixtures
 ```
+
+The data flow is intentionally one-way:
+
+```mermaid
+flowchart LR
+    I[Fixed local inputs\nBOSCH · PHM · synthetic] --> V[Source validation\nand SHA-256 provenance]
+    V --> Q[Qualification gates\nSUPPORTED · LIMITED · BLOCKED]
+    Q --> A[Deterministic analytics\nand synthetic SPC]
+    A --> S[Dashboard service\nsafe projections + integrity seal]
+    S --> U[Streamlit pages\nread-only charts and JSON]
+```
+
+The dashboard does not bypass a gate or recompute engineering statistics in the UI.
 
 The UI reuses backend calculations. It does not independently compute engineering
 statistics or override readiness decisions. Display sampling preserves critical points,

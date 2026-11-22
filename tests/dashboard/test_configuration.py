@@ -16,6 +16,16 @@ def test_local_security_configuration() -> None:
     assert config["client"]["disableDataExport"] is True
 
 
+def test_light_and_dark_themes_have_independent_palettes() -> None:
+    config = tomllib.loads((ROOT / ".streamlit/config.toml").read_text())
+    theme = config["theme"]
+    assert theme["base"] == "light"
+    assert theme["light"]["backgroundColor"] == "#ffffff"
+    assert theme["light"]["textColor"] == "#172b4d"
+    assert theme["dark"]["backgroundColor"] == "#0e1117"
+    assert theme["dark"]["textColor"] == "#f2f5f8"
+
+
 def test_backend_installation_has_no_required_dashboard_dependencies() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]
     for dependency in project["dependencies"]:

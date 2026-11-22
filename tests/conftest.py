@@ -23,6 +23,8 @@ def phm_fixture(tmp_path: Path) -> Path:
             "runnum": [42, 42, 42],
             "recipe": [3, 3, 3],
             "recipe_step": [1.0, 1.0, 2.0],
+            "ETCHBEAMCURRENT": [0.4, None, 0.6],
+            "ETCHBEAMVOLTAGE": [0.7, 0.8, 0.9],
             "SENSOR_A": [0.1, 0.2, 0.3],
         }
     )

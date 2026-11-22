@@ -236,6 +236,8 @@ def test_phm_unverified_time_units_block_temporal_fault_analysis(phm_fixture: Pa
         qualification.decision(AnalysisId.PHM_FAULT_EVENT_INVENTORY).status
         is ReadinessStatus.SUPPORTED
     )
+    assert "source extraction documentation labels" in qualification.time.extraction_bias
+    assert "not used as duration windows" in qualification.time.extraction_bias
 
 
 def test_readiness_evidence_is_source_specific(phm_fixture: Path, bosch_fixture: Path) -> None:

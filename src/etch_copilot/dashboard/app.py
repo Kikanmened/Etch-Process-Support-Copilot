@@ -5,7 +5,7 @@ from typing import Any
 import streamlit as st
 
 from etch_copilot.analytics.contracts import AnalyticsScopeError
-from etch_copilot.dashboard.charts import candidate_charts, trend_chart
+from etch_copilot.dashboard.charts import candidate_charts, phm_sensor_chart, trend_chart
 from etch_copilot.dashboard.service import DashboardService, Evidence, ResultStore, bosch_selection
 from etch_copilot.dashboard.views import safe_text
 from etch_copilot.qualification import AnalysisBlockedError, AnalysisLimitedError
@@ -118,6 +118,15 @@ def display(result: Evidence) -> None:
         st.warning("Recorded events do not establish fault onset or diagnostic accuracy.")
         st.text(features["time_semantics"])
         st.text(features["sampling_bias"])
+        st.plotly_chart(
+            phm_sensor_chart(results["sensor_trend"]),
+            width="stretch",
+            config={"displaylogo": False, "modeBarButtonsToRemove": ["toImage"]},
+        )
+        st.caption(
+            "Lines use raw source coordinates. Breaks show missing recorded values or "
+            "unsampled coordinate intervals; they are not elapsed-time estimates."
+        )
         left, right = st.columns(2)
         left.metric("Raw observations", features["raw_observation_count"])
         right.metric("Exact duplicate observations (retained)", features["exact_duplicate_count"])
@@ -191,20 +200,27 @@ def main() -> None:
             st.caption(
                 "Select a dataset to validate readiness. Startup does not load research data."
             )
-            for key in ("bosch", "phm", "synthetic"):
-                try:
-                    available = service.registry.path(key).is_dir()
-                except Exception:
-                    available = False
-                status = (
-                    "local directory present — verification required"
-                    if available
-                    else "unavailable"
-                )
-                st.text(f"{key.upper()}: {status}")
+            st.caption(
+                "Initial startup availability check; directory presence is not verification."
+            )
+            availability = st.empty()
             selection = st.selectbox("Dataset", ["synthetic", "bosch", "phm"])
             if st.button("Verify engineering readiness"):
                 store.put(page, service.readiness(selection))
+            verified = store.entries.get(page)
+            with availability.container():
+                for key in ("bosch", "phm", "synthetic"):
+                    try:
+                        available = service.registry.path(key).is_dir()
+                    except Exception:
+                        available = False
+                    if verified is not None and verified.dataset == key:
+                        status = "verified — contents and availability reverified"
+                    elif available:
+                        status = "local directory present — not yet verified"
+                    else:
+                        status = "unavailable"
+                    st.text(f"{key.upper()}: {status}")
         elif page == PAGES[2]:
             st.header("Synthetic SPC investigations")
             selection = st.selectbox("Scenario", ["S1", "S2", "S3"])

@@ -16,6 +16,8 @@ from etch_copilot.analytics.contracts import (
     MetadataItem,
     PhmFaultInventoryResult,
     PhmFeatureInventoryResult,
+    PhmSensorSeries,
+    PhmSensorTrendResult,
 )
 from etch_copilot.analytics.policies import analysis_context, authorize_phm
 from etch_copilot.loaders import PHM_ID_COLUMNS, PhmDataset
@@ -26,6 +28,7 @@ from etch_copilot.qualification import (
 )
 
 _MAX_FAULT_EVENT_RECORDS = 50_000
+_PHM_CHART_FIELDS = ("ETCHBEAMCURRENT", "ETCHBEAMVOLTAGE")
 
 
 def _feature_item(frame: pd.DataFrame, feature: str) -> FeatureInventoryItem:
@@ -54,7 +57,9 @@ def phm_feature_inventory(
     decision, selected_ids, canonical, dataset = authorize_phm(
         dataset, AnalysisId.PHM_FEATURE_AVAILABILITY, equipment_id
     )
-    frame = dataset.observations[dataset.observations["Tool"].astype(str).isin(selected_ids)]
+    frame = dataset.observations[
+        dataset.observations["Tool"].astype(str).isin(selected_ids)
+    ].reset_index(drop=True)
     features = tuple(sorted(set(frame.columns) - set(PHM_ID_COLUMNS)))
     qualification = build_phm_qualification(dataset)
     metadata = tuple(
@@ -147,4 +152,95 @@ def phm_fault_inventory(
         events=records,
         event_semantics=qualification.time.event_semantics,
         ambiguous_event_field_count=sum(bool(record.missing_fields) for record in records),
+    )
+
+
+def phm_sensor_trend(
+    dataset: PhmDataset, equipment_id: str | None = None
+) -> PhmSensorTrendResult:
+    """Return bounded PHM traces in raw source-coordinate order without time inference."""
+    decision, selected_ids, canonical, dataset = authorize_phm(
+        dataset, AnalysisId.PHM_TIME_SERIES, equipment_id, include_fault_identifiers=True
+    )
+    frame = dataset.observations[dataset.observations["Tool"].astype(str).isin(selected_ids)]
+    missing_fields = tuple(field for field in _PHM_CHART_FIELDS if field not in frame.columns)
+    if missing_fields:
+        raise AnalyticsScopeError(
+            AnalysisId.PHM_TIME_SERIES,
+            decision.scope,
+            ("required recorded fields are unavailable: " + ", ".join(missing_fields),),
+        )
+    coordinates = tuple(int(value) for value in frame["time"])
+    discontinuities: list[int] = []
+    for _, group in frame.groupby(["Tool", "runnum"], sort=False):
+        deltas = group["time"].diff()
+        positive = deltas[deltas > 0]
+        median = float(positive.median()) if not positive.empty else None
+        for position, delta in zip(group.index[1:], deltas.iloc[1:], strict=True):
+            if delta <= 0 or (median is not None and delta > median * 10):
+                discontinuities.append(int(position) - 1)
+    run_keys = list(zip(frame["Tool"].astype(str), frame["runnum"], strict=True))
+    discontinuities.extend(
+        index
+        for index in range(len(run_keys) - 1)
+        if run_keys[index] != run_keys[index + 1]
+    )
+    series = []
+    for field in _PHM_CHART_FIELDS:
+        numeric = pd.to_numeric(frame[field], errors="coerce").to_numpy(dtype=np.float64)
+        series.append(
+            PhmSensorSeries(
+                source_name=field,
+                recorded_values=tuple(
+                    float(value) if np.isfinite(value) else None for value in numeric
+                ),
+            )
+        )
+    qualification = build_phm_qualification(dataset)
+    events = tuple(
+        FaultEventRecord(
+            source_index=index,
+            source_equipment_id=event.equipment_id,
+            canonical_equipment_id=(
+                canonicalize_phm_equipment_id(event.equipment_id, qualification.identifiers)
+                if event.equipment_id is not None
+                else None
+            ),
+            category=event.fault_name,
+            source_coordinate=event.event_time,
+            coordinate_unit=None,
+            is_confirmed_fault_onset=False,
+            missing_fields=tuple(
+                name
+                for name, value in (
+                    ("source_coordinate", event.event_time),
+                    ("fault_name", event.fault_name),
+                    ("equipment_id", event.equipment_id),
+                )
+                if value is None or (isinstance(value, str) and not value)
+            ),
+        )
+        for index, event in enumerate(dataset.faults)
+        if event.equipment_id in selected_ids
+        or (
+            canonical is not None
+            and event.equipment_id is not None
+            and canonicalize_phm_equipment_id(event.equipment_id, qualification.identifiers)
+            == canonical
+        )
+    )
+    return PhmSensorTrendResult(
+        **analysis_context(decision, dataset.provenance),
+        source_equipment_ids=selected_ids,
+        canonical_equipment_id=canonical,
+        coordinate_name="time",
+        coordinate_unit=None,
+        coordinate_semantics=(
+            "raw source coordinate only; duration, calendar origin, and timezone are unresolved"
+        ),
+        source_coordinates=coordinates,
+        discontinuity_after_indices=tuple(sorted(set(discontinuities))),
+        series=tuple(series),
+        events=events,
+        event_semantics=qualification.time.event_semantics,
     )

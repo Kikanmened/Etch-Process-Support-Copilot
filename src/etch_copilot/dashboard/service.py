@@ -22,6 +22,7 @@ from etch_copilot.analytics import (
     bosch_sensor_statistics,
     phm_fault_inventory,
     phm_feature_inventory,
+    phm_sensor_trend,
 )
 from etch_copilot.dashboard.views import DashboardError, project
 from etch_copilot.loaders import BOSCH_REQUIRED, PHM_REQUIRED, load_bosch_dataset, load_phm_dataset
@@ -294,6 +295,7 @@ class DashboardService:
             {
                 "features": phm_feature_inventory(dataset, equipment),
                 "events": phm_fault_inventory(dataset, equipment),
+                "sensor_trend": phm_sensor_trend(dataset, equipment),
             },
         )
 
