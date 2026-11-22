@@ -17,11 +17,12 @@ uv run --frozen --no-sync mypy src
 
 ## Portable versus provisioned verification
 
-The portable suite is expected to run **166 tests**. It excludes the six tests
-marked `integration`, which intentionally require the separately approved local
-BOSCH and PHM research datasets. CI does not download, cache, upload or
-redistribute those datasets, the BOSCH research reference, or the four standards
-PDFs.
+The portable suite selects tests with `-m "not integration"`. Test count is deliberately
+not treated as a CI contract: it can change as coverage is added, and the authoritative
+result is the completed check for the exact commit under review. The excluded integration
+tests intentionally require separately approved local BOSCH and PHM research datasets.
+CI does not download, cache, upload or redistribute those datasets, the BOSCH research
+reference, or the four standards PDFs.
 
 The **172-test provisioned suite** is run only in an authorized local environment
 where those datasets are already available. It additionally verifies real
@@ -42,4 +43,6 @@ release verification in [the dashboard guide](ENGINEERING_DASHBOARD.md).
   disagree.
 
 The workflow validates portable code quality. It does not change any scientific
-readiness decision or substitute for the provisioned release checks.
+readiness decision or substitute for the provisioned release checks. A workflow file in
+the repository is not evidence of a passing run; use the pull request's exact-commit check
+conclusion as the public CI result.
