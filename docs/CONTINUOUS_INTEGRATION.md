@@ -50,7 +50,7 @@ conclusion as the public CI result.
 ## Current local verification
 
 On 2026-11-22, the current local checkout completed the portable command
-`.venv/bin/pytest -q -m "not integration"` with **166 passed, 6 deselected** in 13.51
+`.venv/bin/pytest -q -m "not integration"` with **167 passed, 6 deselected** in 15.02
 seconds. This is local evidence only; it is not a GitHub Actions result and does not
 replace checking the exact commit's public workflow conclusion.
 
