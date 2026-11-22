@@ -10,6 +10,7 @@ from etch_copilot.analytics import (
     AnalyticsScopeError,
     phm_fault_inventory,
     phm_feature_inventory,
+    phm_sensor_trend,
 )
 from etch_copilot.loaders import load_phm_dataset
 from etch_copilot.qualification import ReadinessStatus
@@ -79,6 +80,26 @@ def test_phm_fault_inventory_reports_events_without_onset_claim(phm_fixture: Pat
     assert result.events[0].coordinate_unit is None
     assert result.events[0].is_confirmed_fault_onset is False
     assert "not verified fault onset" in result.event_semantics
+
+
+def test_phm_sensor_trend_preserves_raw_coordinates_values_and_events(
+    phm_fixture: Path,
+) -> None:
+    result = phm_sensor_trend(load_phm_dataset(phm_fixture), equipment_id="01M01")
+
+    assert result.readiness_status is ReadinessStatus.LIMITED
+    assert result.source_coordinates == (100, 110, 120)
+    assert [series.source_name for series in result.series] == [
+        "ETCHBEAMCURRENT",
+        "ETCHBEAMVOLTAGE",
+    ]
+    assert result.series[0].recorded_values == (0.4, None, 0.6)
+    assert result.series[1].recorded_values == (0.7, 0.8, 0.9)
+    assert result.events[0].source_coordinate == 110
+    assert result.events[0].is_confirmed_fault_onset is False
+    assert result.coordinate_unit is None
+    assert "duration" in result.coordinate_semantics
+    assert "calendar" in result.coordinate_semantics
 
 
 def test_phm_fault_inventory_preserves_missing_event_fields(phm_fixture: Path) -> None:

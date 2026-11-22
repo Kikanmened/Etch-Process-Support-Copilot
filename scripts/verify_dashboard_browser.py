@@ -83,6 +83,20 @@ def main() -> None:
         page.get_by_role("button", name="Analyze equipment evidence").wait_for(timeout=30000)
         page.get_by_role("button", name="Analyze equipment evidence").click()
         page.get_by_text("Raw observations", exact=True).wait_for(timeout=30000)
+        phm_plot = page.locator(".js-plotly-plot").first
+        phm_plot.wait_for(timeout=30000)
+        phm_plot.scroll_into_view_if_needed()
+        write_verification_artifact("phm-desktop.png", page.screenshot())
+        for width, height in [(768, 1024), (390, 844)]:
+            page.set_viewport_size({"width": width, "height": height})
+            page.wait_for_function("""() => {
+                const plot = document.querySelector('.js-plotly-plot');
+                return plot && plot._fullLayout.width <= window.innerWidth;
+            }""")
+            page.wait_for_timeout(500)
+            phm_plot.scroll_into_view_if_needed()
+            write_verification_artifact(f"phm-{width}.png", page.screenshot())
+        page.set_viewport_size({"width": 1440, "height": 1100})
         for scenario in ("S1", "S3"):
             page.get_by_text("Synthetic SPC investigations", exact=True).first.click()
             page.get_by_role("combobox", name="Scenario").click()

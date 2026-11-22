@@ -43,6 +43,22 @@ For a command-line path, run the [deterministic demo](docs/examples/README.md) t
 regenerate the committed [S2 evidence artifact](docs/examples/synthetic-s2-evidence.json)
 from the manifest and validation result.
 
+### PHM responsive chart preview
+
+The PHM view presents `ETCHBEAMCURRENT` and `ETCHBEAMVOLTAGE` in separate panels using
+raw source coordinates. Gaps remain visible, and red dotted markers identify recorded
+events without claiming fault onset, causality, duration semantics or calendar time.
+
+![PHM dashboard desktop view](data/processed/dashboard/phm-desktop.png)
+
+Tablet view:
+
+![PHM dashboard tablet view](data/processed/dashboard/phm-768.png)
+
+Mobile view:
+
+![PHM dashboard mobile view](data/processed/dashboard/phm-390.png)
+
 ## Repository and verification status
 
 This documentation audit started from local branch `feature/github-actions-ci` at

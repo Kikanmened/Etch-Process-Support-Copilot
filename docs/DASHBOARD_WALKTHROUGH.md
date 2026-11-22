@@ -28,3 +28,22 @@ The browser verification script also checks S1/S3 refusal states, provenance dow
 source freshness and the loopback-only network policy. See
 [`verify_dashboard_browser.py`](../scripts/verify_dashboard_browser.py) for the exact
 journey and regeneration command.
+
+## 3. Inspect PHM recorded sensor evidence
+
+When the separately provisioned PHM source is available, choose an equipment identifier
+and analyze its evidence. The two panels show only the recorded `ETCHBEAMCURRENT` and
+`ETCHBEAMVOLTAGE` fields against raw source coordinates. Line breaks preserve missing
+recorded values and unsampled coordinate intervals. Vertical markers are recorded events,
+not verified fault onset.
+
+![PHM raw-coordinate sensor panels](../data/processed/dashboard/phm-desktop.png)
+
+The source extraction documentation's “30-minute pre-event / 10-minute post-event” labels
+are displayed as provenance only. Because the coordinate unit, calendar origin and timezone
+are unresolved, the dashboard does not interpret those labels as duration windows or infer
+calendar time.
+
+![PHM tablet capture](../data/processed/dashboard/phm-768.png)
+
+![PHM mobile capture](../data/processed/dashboard/phm-390.png)
